@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoKnow Map Editor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: none;
+            margin: 0;
+            background: none;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .main-content {
+            display: block;
+            height: 100vh;
+            position: relative;
+        }
+
+        .sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 350px;
+            max-height: calc(100vh - 40px);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .sidebar-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 300;
+        }
+
+        .sidebar-header p {
+            margin: 8px 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .map-area {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .file-input {
+            padding: 12px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .file-input input {
+            display: none;
+        }
+
+        .entity-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .entity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .entity-item:hover {
+            background: #e2e8f0;
+        }
+
+        .entity-item.selected {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .entity-name {
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .entity-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 2px solid #2d3748;
+            flex-shrink: 0;
+        }
+
+        .entity-population {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        .map-controls-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 600;
+            min-width: 20px;
+        }
+
+        .size-input {
+            width: 60px;
+            padding: 6px 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: #f7fafc;
+            border-color: #a0aec0;
+        }
+
+        .zoom-level {
+            font-size: 0.85rem;
+            color: #4a5568;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .pan-hint {
+            font-size: 0.8rem;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .map-viewport {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            background: #e2e8f0;
+        }
+
+        .map-viewport.dragging {
+            cursor: grabbing;
+        }
+
+        .map-container {
+            position: absolute;
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+        }
+
+        .map-container.no-transition {
+            transition: none;
+        }
+
+        .map-grid {
+            display: inline-grid;
+            gap: 1px;
+            background: #cbd5e0;
+            border: 2px solid #a0aec0;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .map-cell {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            border-radius: 3px;
+        }
+
+        .map-cell.empty {
+            background: #2d3748;
+        }
+
+        .map-cell.tile {
+            background: #48bb78;
+        }
+
+        .map-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .population-display {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            display: none;
+            pointer-events: none;
+            flex-wrap: wrap;
+            gap: 1px;
+            align-content: flex-start;
+        }
+
+        .map-cell.has-population .population-display {
+            display: flex;
+        }
+
+        .entity-pop-box {
+            min-width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            border-radius: 2px;
+            color: white;
+            font-size: 7px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 10px;
+            text-shadow: 0 0 2px rgba(0,0,0,0.8);
+            flex-shrink: 0;
+            padding: 0 1px;
+        }
+
+        .tool-mode {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .status {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            color: #234e52;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .population-counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .counter-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #cbd5e0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .counter-btn:hover {
+            background: #f7fafc;
+        }
+
+        .population-input {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .export-area {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .section.disabled::after {
+            content: 'Load matrices first';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <!-- Floating Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h1>🌿 EcoKnow Map Editor</h1>
+                    <p>Create ecosystem maps with entity populations</p>
+                </div>
+
+                <div class="sidebar-content">
+                    <!-- Map Controls Section -->
+                    <div class="section">
+                        <h3>🗺️ Map Controls</h3>
+                        <div class="map-controls-section">
+                            <div class="control-row">
+                                <div class="control-group">
+                                    <label>W:</label>
+                                    <input type="number" id="map-width" value="10" min="1" max="100" onchange="createMap()" class="size-input" />
+                                </div>
+                                <div class="control-group">
+                                    <label>H:</label>
+                                    <input type="number" id="map-height" value="10" min="1" max="100" onchange="createMap()" class="size-input" />
+                                </div>
+                            </div>
+                            
+                            <div class="control-row">
+                                <div class="zoom-controls">
+                                    <button class="zoom-btn" onclick="zoomOut()">−</button>
+                                    <span class="zoom-level" id="zoom-level">100%</span>
+                                    <button class="zoom-btn" onclick="zoomIn()">+</button>
+                                </div>
+                                <button class="btn btn-secondary" onclick="resetView()">Reset View</button>
+                            </div>
+                            
+                            <div class="control-row">
+                                <button class="btn btn-secondary" onclick="clearMap()" style="flex: 1;">Clear Map</button>
+                            </div>
+                            
+                            <div class="pan-hint">💡 Drag to pan • Scroll to zoom</div>
+                        </div>
+                    </div>
+
+                    <!-- Load Matrices Section -->
+                    <div class="section">
+                        <h3>📊 Load Matrices</h3>
+                        <div class="file-input" onclick="document.getElementById('matrices-file').click()">
+                            <input type="file" id="matrices-file" accept=".csv" />
+                            <p>Click to load Matrices.csv</p>
+                            <small>This defines the entities and their interactions</small>
+                        </div>
+                        <div id="matrices-status" class="status"></div>
+                    </div>
+
+                    <!-- Load Map Section -->
+                    <div class="section" id="load-map-section">
+                        <h3>🗺️ Load Map</h3>
+                        <div class="file-input" onclick="document.getElementById('map-file').click()">
+                            <input type="file" id="map-file" accept=".csv" />
+                            <p>Click to load Map.csv</p>
+                            <small>Load existing map data to continue editing</small>
+                        </div>
+                        <div id="map-status" class="status"></div>
+                    </div>
+
+                    <!-- Entities Section -->
+                    <div class="section">
+                        <h3>🦊 Entities</h3>
+                        <div id="entity-list" class="entity-list">
+                            <p style="text-align: center; color: #a0aec0; margin: 20px 0;">
+                                Load a matrices file to see entities
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Drawing Tools -->
+                    <div class="section">
+                        <h3>🎨 Drawing Tools</h3>
+                        <div class="tool-mode">
+                            <div class="mode-buttons">
+                                <div class="mode-btn active" data-mode="terrain">Terrain</div>
+                                <div class="mode-btn" data-mode="population">Population</div>
+                            </div>
+                            
+                            <div id="terrain-controls">
+                                <button class="btn btn-secondary" onclick="setDrawMode('tile')">Draw Tiles</button>
+                                <button class="btn btn-secondary" onclick="setDrawMode('empty')">Erase</button>
+                            </div>
+
+                            <div id="population-controls" style="display: none;">
+                                <p><strong>Selected Entity:</strong> <span id="selected-entity">None</span></p>
+                                <div class="population-counter">
+                                    <button class="counter-btn" onclick="adjustPopulation(-1)">-</button>
+                                    <input type="number" id="population-value" class="population-input" value="1" min="0" max="999999999" />
+                                    <button class="counter-btn" onclick="adjustPopulation(1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="section">
+                        <h3>💾 Export</h3>
+                        <div class="export-area">
+                            <button class="btn btn-primary" onclick="exportMap()" style="width: 100%;">
+                                Download Map.csv
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full-Screen Map Area -->
+            <div class="map-area">
+                <div class="map-viewport" id="map-viewport">
+                    <div class="map-container" id="map-container">
+                        <div id="map-grid" class="map-grid">
+                            <!-- Grid cells will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let entities = [];
+        let mapData = [];
+        let selectedEntity = null;
+        let drawMode = 'tile'; // 'tile' or 'empty'
+        let toolMode = 'terrain'; // 'terrain' or 'population'
+        let populationValue = 1;
+        let isDrawing = false;
+        let entityPopulationValues = {}; // Remember population values per entity
+
+        // Pan and zoom state
+        let panX = 0;
+        let panY = 0;
+        let zoom = 1;
+        let isPanning = false;
+        let lastPanX = 0;
+        let lastPanY = 0;
+
+        // Entity colors - bright, distinct colors
+        const entityColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA', '#F1948A', '#AED6F1'
+        ];
+
+        function getEntityColor(index) {
+            return entityColors[index % entityColors.length];
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000000) {
+                return '~' + (num / 1000000000).toFixed(1) + 'B';
+            } else if (num >= 1000000) {
+                return '~' + (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return '~' + (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createMap();
+            setupEventListeners();
+            updateZoomDisplay();
+            updateMapLoadingState(); // Check if map loading should be enabled
+        });
+
+        function setupEventListeners() {
+            // File inputs
+            document.getElementById('matrices-file').addEventListener('change', loadMatrices);
+            document.getElementById('map-file').addEventListener('change', loadMap);
+
+            // Tool mode switching
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    switchToolMode(mode);
+                });
+            });
+
+            // Population input - handle both change and input events
+            const populationInput = document.getElementById('population-value');
+            
+            populationInput.addEventListener('input', function() {
+                populationValue = parseInt(this.value) || 0;
+                
+                // Save the new value for the current entity
+                if (selectedEntity !== null) {
+                    entityPopulationValues[selectedEntity] = populationValue;
+                }
+            });
+            
+            populationInput.addEventListener('change', function() {
+                populationValue = parseInt(this.value) || 0;
+                
+                // Save the new value for the current entity
+                if (selectedEntity !== null) {
+                    entityPopulationValues[selectedEntity] = populationValue;
+                }
+            });
+
+            // Pan and zoom controls
+            setupPanZoomControls();
+        }
+
+        function setupPanZoomControls() {
+            const viewport = document.getElementById('map-viewport');
+            
+            // Mouse wheel zoom
+            viewport.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                setZoom(zoom + delta);
+            });
+
+            // Pan controls
+            viewport.addEventListener('mousedown', function(e) {
+                if (e.button === 0 && !e.target.classList.contains('map-cell')) {
+                    isPanning = true;
+                    lastPanX = e.clientX;
+                    lastPanY = e.clientY;
+                    viewport.classList.add('dragging');
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isPanning) {
+                    const deltaX = e.clientX - lastPanX;
+                    const deltaY = e.clientY - lastPanY;
+                    
+                    panX += deltaX;
+                    panY += deltaY;
+                    
+                    lastPanX = e.clientX;
+                    lastPanY = e.clientY;
+                    
+                    updateMapTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isPanning) {
+                    isPanning = false;
+                    viewport.classList.remove('dragging');
+                }
+            });
+        }
+
+        function updateMapTransform() {
+            const container = document.getElementById('map-container');
+            container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+        }
+
+        function setZoom(newZoom) {
+            zoom = Math.max(0.5, Math.min(2, newZoom));
+            updateMapTransform();
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
+        }
+
+        function zoomIn() {
+            setZoom(zoom + 0.2);
+        }
+
+        function zoomOut() {
+            setZoom(zoom - 0.2);
+        }
+
+        function resetView() {
+            const viewport = document.getElementById('map-viewport');
+            const mapGrid = document.getElementById('map-grid');
+            
+            // Get viewport dimensions
+            const viewportWidth = viewport.clientWidth;
+            const viewportHeight = viewport.clientHeight;
+            
+            // Estimate map size (40px per cell + padding and borders)
+            const mapWidth = mapData.length > 0 ? mapData[0].length * 41 + 20 : 200;
+            const mapHeight = mapData.length > 0 ? mapData.length * 41 + 20 : 200;
+            
+            // Center the map in the viewport
+            panX = Math.max(20, (viewportWidth - mapWidth) / 2);
+            panY = Math.max(20, (viewportHeight - mapHeight) / 2);
+            zoom = 1;
+            
+            updateMapTransform();
+            updateZoomDisplay();
+        }
+
+        function loadMatrices(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    parseMatrices(csv);
+                    showStatus('matrices-status', 'Matrices loaded successfully!', 'success');
+                } catch (error) {
+                    showStatus('matrices-status', 'Error loading matrices: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadMap(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log('Loading file:', file.name, 'Size:', file.size, 'bytes');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csv = e.target.result;
+                    console.log('Raw CSV content length:', csv.length);
+                    console.log('First 200 characters:', csv.substring(0, 200));
+                    
+                    if (!csv || csv.trim().length === 0) {
+                        throw new Error('CSV file is empty or contains no readable data');
+                    }
+                    
+                    parseMapData(csv);
+                    showStatus('map-status', 'Map loaded successfully!', 'success');
+                } catch (error) {
+                    console.error('Error loading map:', error);
+                    showStatus('map-status', 'Error loading map: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                console.error('File reading error');
+                showStatus('map-status', 'Error reading file', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function parseMatrices(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 1) throw new Error('Empty CSV file');
+
+            // Parse header to get entity names
+            const header = lines[0].split(',').map(col => col.trim());
+            
+            entities = header.map((name, index) => ({
+                name: name,
+                index: index,
+                population: 0
+            }));
+
+            // Initialize population values for new entities
+            entities.forEach((entity, index) => {
+                if (!(index in entityPopulationValues)) {
+                    entityPopulationValues[index] = 1;
+                }
+            });
+
+            // Update populations array for existing map data
+            if (mapData.length > 0) {
+                for (let y = 0; y < mapData.length; y++) {
+                    for (let x = 0; x < mapData[y].length; x++) {
+                        // Extend or truncate populations array to match new entities
+                        const currentPops = mapData[y][x].populations;
+                        mapData[y][x].populations = entities.map((_, index) => currentPops[index] || 0);
+                    }
+                }
+                updateAllCellDisplays();
+            }
+
+            updateEntityList();
+            updateMapLoadingState(); // Enable map loading now that matrices is loaded
+        }
+
+        function updateMapLoadingState() {
+            const mapSection = document.getElementById('load-map-section');
+            
+            if (entities.length === 0) {
+                // Disable map loading
+                mapSection.classList.add('disabled');
+            } else {
+                // Enable map loading
+                mapSection.classList.remove('disabled');
+            }
+        }
+
+        function parseMapData(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length === 0) throw new Error('Empty CSV file');
+
+            console.log('Parsing map data:', lines.length, 'lines');
+
+            // First pass: parse all rows without splitting on commas inside brackets
+            const rowData = [];
+            let maxWidth = 0;
+            
+            for (let y = 0; y < lines.length; y++) {
+                const line = lines[y];
+                const cells = [];
+                let currentCell = '';
+                let insideBrackets = false;
+                
+                // Parse character by character to handle brackets correctly
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '[') {
+                        insideBrackets = true;
+                        currentCell += char;
+                    } else if (char === ']') {
+                        insideBrackets = false;
+                        currentCell += char;
+                    } else if (char === ',' && !insideBrackets) {
+                        // This comma separates cells, not populations
+                        cells.push(currentCell.trim());
+                        currentCell = '';
+                    } else {
+                        currentCell += char;
+                    }
+                }
+                
+                // Don't forget the last cell
+                if (currentCell.trim()) {
+                    cells.push(currentCell.trim());
+                }
+                
+                rowData.push(cells);
+                maxWidth = Math.max(maxWidth, cells.length);
+                console.log(`Row ${y}:`, cells.length, 'cells', cells.slice(0, 3).join(' | '));
+            }
+
+            const newHeight = lines.length;
+            const newWidth = maxWidth;
+
+            console.log('Map dimensions:', newWidth, 'x', newHeight);
+
+            // Update size inputs
+            document.getElementById('map-width').value = newWidth;
+            document.getElementById('map-height').value = newHeight;
+
+            // Initialize map data with consistent dimensions
+            mapData = Array(newHeight).fill().map(() => 
+                Array(newWidth).fill().map(() => ({
+                    tileType: -1,
+                    populations: entities.length > 0 ? entities.map(() => 0) : []
+                }))
+            );
+
+            // Parse each cell with consistent grid handling
+            for (let y = 0; y < newHeight; y++) {
+                const cells = rowData[y] || [];
+                
+                for (let x = 0; x < newWidth; x++) {
+                    const cell = x < cells.length ? cells[x] : '-1';
+                    
+                    if (cell === '-1' || cell === '') {
+                        mapData[y][x].tileType = -1;
+                        mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
+                    } else {
+                        // Parse format like "0[34,2,0]"
+                        const match = cell.match(/^(\d+)\[(.+)\]$/);
+                        if (match) {
+                            mapData[y][x].tileType = parseInt(match[1]);
+                            const populations = match[2].split(',').map(p => parseInt(p.trim()) || 0);
+                            
+                            // Ensure populations array matches entities length
+                            if (entities.length > 0) {
+                                mapData[y][x].populations = entities.map((_, index) => populations[index] || 0);
+                            } else {
+                                mapData[y][x].populations = populations;
+                            }
+                            console.log(`Cell [${x},${y}]: tile=${match[1]}, pops=[${populations.join(',')}]`);
+                        } else {
+                            // Just a tile type number
+                            const tileType = parseInt(cell);
+                            if (!isNaN(tileType)) {
+                                mapData[y][x].tileType = tileType;
+                                mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
+                                console.log(`Cell [${x},${y}]: simple tile=${tileType}`);
+                            } else {
+                                console.warn(`Invalid cell format at [${x},${y}]: "${cell}"`);
+                                mapData[y][x].tileType = -1;
+                                mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
+                            }
+                        }
+                    }
+                }
+            }
+
+            console.log('Map data parsed successfully, creating visual...');
+
+            // Force recreate the visual map
+            createMapVisual();
+            
+            // Center the map after loading
+            setTimeout(() => {
+                resetView();
+                console.log('Map visual updated and centered');
+            }, 100);
+            
+            updateEntityList();
+        }
+
+        function updateEntityList() {
+            const listContainer = document.getElementById('entity-list');
+            
+            if (entities.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #a0aec0; margin: 20px 0;">Load a matrices file to see entities</p>';
+                return;
+            }
+
+            // Calculate total populations across all map tiles
+            const totalPopulations = entities.map(() => 0);
+            
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    const cell = mapData[y][x];
+                    if (cell.tileType >= 0) {
+                        for (let i = 0; i < cell.populations.length; i++) {
+                            totalPopulations[i] += cell.populations[i] || 0;
+                        }
+                    }
+                }
+            }
+
+            listContainer.innerHTML = entities.map((entity, index) => `
+                <div class="entity-item" onclick="selectEntity(${index})">
+                    <span class="entity-name">
+                        <div class="entity-color" style="background-color: ${getEntityColor(index)}"></div>
+                        ${entity.name}
+                    </span>
+                    <span class="entity-population">${formatNumber(totalPopulations[index] || 0)}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectEntity(index) {
+            // Save current population value for the previously selected entity
+            if (selectedEntity !== null) {
+                entityPopulationValues[selectedEntity] = populationValue;
+            }
+
+            selectedEntity = index;
+            
+            // Restore population value for newly selected entity (default to 1 if not set)
+            populationValue = entityPopulationValues[index] || 1;
+            document.getElementById('population-value').value = populationValue;
+            
+            // Update UI
+            document.querySelectorAll('.entity-item').forEach((item, i) => {
+                item.classList.toggle('selected', i === index);
+            });
+
+            document.getElementById('selected-entity').textContent = entities[index].name;
+            
+            // Switch to population mode if selecting an entity
+            if (toolMode === 'terrain') {
+                switchToolMode('population');
+            }
+        }
+
+        function switchToolMode(mode) {
+            toolMode = mode;
+            
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+
+            // Show/hide controls
+            document.getElementById('terrain-controls').style.display = mode === 'terrain' ? 'block' : 'none';
+            document.getElementById('population-controls').style.display = mode === 'population' ? 'block' : 'none';
+        }
+
+        function setDrawMode(mode) {
+            drawMode = mode;
+        }
+
+        function adjustPopulation(delta) {
+            const input = document.getElementById('population-value');
+            const newValue = Math.max(0, Math.min(999999999, parseInt(input.value) + delta));
+            input.value = newValue;
+            populationValue = newValue;
+            
+            // Save the new value for the current entity
+            if (selectedEntity !== null) {
+                entityPopulationValues[selectedEntity] = newValue;
+            }
+        }
+
+        function createMap() {
+            const newWidth = parseInt(document.getElementById('map-width').value);
+            const newHeight = parseInt(document.getElementById('map-height').value);
+
+            // Store existing map data if it exists
+            const oldMapData = mapData.length > 0 ? [...mapData] : [];
+            const oldWidth = oldMapData.length > 0 ? oldMapData[0].length : 0;
+            const oldHeight = oldMapData.length;
+
+            // Initialize new map data
+            mapData = Array(newHeight).fill().map(() => 
+                Array(newWidth).fill().map(() => ({
+                    tileType: -1, // -1 = empty, 0+ = tile
+                    populations: entities.map(() => 0)
+                }))
+            );
+
+            // Preserve existing data that fits within new dimensions
+            for (let y = 0; y < Math.min(oldHeight, newHeight); y++) {
+                for (let x = 0; x < Math.min(oldWidth, newWidth); x++) {
+                    if (oldMapData[y] && oldMapData[y][x]) {
+                        mapData[y][x] = {
+                            tileType: oldMapData[y][x].tileType,
+                            populations: [...(oldMapData[y][x].populations || entities.map(() => 0))]
+                        };
+                        
+                        // Ensure populations array matches current entities length
+                        while (mapData[y][x].populations.length < entities.length) {
+                            mapData[y][x].populations.push(0);
+                        }
+                        mapData[y][x].populations = mapData[y][x].populations.slice(0, entities.length);
+                    }
+                }
+            }
+
+            createMapVisual();
+            updateEntityList(); // Update totals in case content was cropped
+        }
+
+        function createMapVisual() {
+            const width = mapData.length > 0 ? mapData[0].length : 0;
+            const height = mapData.length;
+
+            // Create grid HTML
+            const grid = document.getElementById('map-grid');
+            grid.style.gridTemplateColumns = `repeat(${width}, 40px)`;
+            grid.innerHTML = '';
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    const cellData = mapData[y][x];
+                    
+                    // Set initial cell appearance based on preserved data
+                    cell.className = cellData.tileType >= 0 ? 'map-cell tile' : 'map-cell empty';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const popDisplay = document.createElement('div');
+                    popDisplay.className = 'population-display';
+                    cell.appendChild(popDisplay);
+
+                    // Mouse events for drawing
+                    cell.addEventListener('mousedown', handleCellClick);
+                    cell.addEventListener('mouseenter', handleCellDrag);
+                    
+                    grid.appendChild(cell);
+
+                    // Update cell display with preserved populations
+                    updateCellDisplay(cell, x, y);
+                }
+            }
+
+            updateMapTransform(); // Maintain current zoom and pan
+        }
+
+        function handleCellClick(event) {
+            // Only handle drawing if not panning
+            if (!isPanning) {
+                isDrawing = true;
+                updateCell(event.target);
+            }
+            event.preventDefault();
+        }
+
+        function handleCellDrag(event) {
+            if (isDrawing && event.buttons === 1 && !isPanning) {
+                updateCell(event.target);
+            }
+        }
+
+        function updateCell(cell) {
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+
+            if (toolMode === 'terrain') {
+                if (drawMode === 'tile') {
+                    mapData[y][x].tileType = 0;
+                    cell.className = 'map-cell tile';
+                } else if (drawMode === 'empty') {
+                    mapData[y][x].tileType = -1;
+                    mapData[y][x].populations = entities.map(() => 0);
+                    cell.className = 'map-cell empty';
+                    cell.classList.remove('has-population');
+                }
+            } else if (toolMode === 'population' && selectedEntity !== null) {
+                // Auto-convert empty tiles to land tiles when placing population
+                if (mapData[y][x].tileType < 0) {
+                    mapData[y][x].tileType = 0;
+                    cell.className = 'map-cell tile';
+                }
+                
+                // Now place the population (works on both existing and newly converted tiles)
+                if (mapData[y][x].tileType >= 0) {
+                    mapData[y][x].populations[selectedEntity] = populationValue;
+                    updateCellDisplay(cell, x, y);
+                }
+            }
+
+            updateEntityList(); // Update totals in sidebar
+        }
+
+        function updateCellDisplay(cell, x, y) {
+            const cellData = mapData[y][x];
+            const popDisplay = cell.querySelector('.population-display');
+            
+            if (!entities.length || cellData.tileType < 0) {
+                cell.classList.remove('has-population');
+                popDisplay.innerHTML = '';
+                return;
+            }
+
+            // Only show entities that have population > 0
+            const presentEntities = entities
+                .map((entity, index) => ({
+                    ...entity,
+                    index,
+                    population: cellData.populations[index] || 0,
+                    color: getEntityColor(index)
+                }))
+                .filter(entity => entity.population > 0);
+
+            if (presentEntities.length > 0) {
+                cell.classList.add('has-population');
+                
+                const popBoxes = presentEntities.map(entity => 
+                    `<div class="entity-pop-box" style="background-color: ${entity.color}">${formatNumber(entity.population)}</div>`
+                ).join('');
+                
+                popDisplay.innerHTML = popBoxes;
+            } else {
+                cell.classList.remove('has-population');
+                popDisplay.innerHTML = '';
+            }
+        }
+
+        function updateAllCellDisplays() {
+            const width = mapData.length > 0 ? mapData[0].length : 0;
+            const height = mapData.length;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+                    if (cell) {
+                        updateCellDisplay(cell, x, y);
+                    }
+                }
+            }
+        }
+
+        function clearMap() {
+            const width = parseInt(document.getElementById('map-width').value);
+            const height = parseInt(document.getElementById('map-height').value);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    mapData[y][x] = {
+                        tileType: -1,
+                        populations: entities.map(() => 0)
+                    };
+                }
+            }
+
+            // Update visual
+            document.querySelectorAll('.map-cell').forEach(cell => {
+                cell.className = 'map-cell empty';
+                cell.classList.remove('has-population');
+                const popDisplay = cell.querySelector('.population-display');
+                if (popDisplay) popDisplay.innerHTML = '';
+            });
+
+            updateEntityList(); // Update totals in sidebar
+        }
+
+        function generateCsv() {
+            if (mapData.length === 0) return '';
+
+            const rows = [];
+            
+            for (let y = 0; y < mapData.length; y++) {
+                const row = [];
+                for (let x = 0; x < mapData[y].length; x++) {
+                    const cell = mapData[y][x];
+                    
+                    if (cell.tileType === -1) {
+                        row.push('-1');
+                    } else {
+                        const populations = cell.populations.join(',');
+                        row.push(`${cell.tileType}[${populations}]`);
+                    }
+                }
+                rows.push(row.join(','));
+            }
+
+            return rows.join('\n');
+        }
+
+        function exportMap() {
+            const csv = generateCsv();
+            if (!csv) {
+                alert('No map data to export');
+                return;
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Map.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showStatus(id, message, type) {
+            const status = document.getElementById(id);
+            status.textContent = message;
+            status.className = `status show ${type}`;
+            setTimeout(() => status.classList.remove('show'), 3000);
+        }
+
+        // Handle mouse up to stop drawing
+        document.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+    </script>
+</body>
+</html>
