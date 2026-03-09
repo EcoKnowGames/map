@@ -3,356 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
     <title>EcoKnow Map Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --sidebar-width: 280px;
+            --properties-width: 280px;
+            --accent: #667eea;
+            --accent-hover: #5a67d8;
+            --bg-dark: #2d3748;
+            --bg-darker: #1a202c;
+            --bg-grid: #222a5f;
+            --text: #2d3748;
+            --text-muted: #718096;
+            --border: #E5E5E5;
+            --empty-cell: #2d3748;
+            --panel-bg: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: none;
-            margin: 0;
-            background: none;
-            border-radius: 0;
-            box-shadow: none;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #E5E5E5;
+            height: 100vh;
             overflow: hidden;
-            height: 100vh;
-            position: relative;
+            color: var(--text);
+            font-size: 12px;
         }
 
-        .main-content {
-            display: block;
-            height: 100vh;
-            position: relative;
-        }
-
+        /* Layout */
         .sidebar {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 350px;
-            max-height: calc(100vh - 40px);
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
             z-index: 10;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar-header {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            background: var(--bg-dark);
             color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 12px 12px 0 0;
+            padding: 10px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
-        .sidebar-header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 300;
-        }
+        .sidebar-header h1 { font-size: 13px; font-weight: 600; }
+        .sidebar-header p { margin-top: 2px; opacity: 0.6; font-size: 11px; }
 
-        .sidebar-header p {
-            margin: 8px 0 0 0;
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-
-        .sidebar-content {
-            padding: 20px;
-        }
-
-        .map-area {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: #e2e8f0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .section {
-            margin-bottom: 25px;
-        }
-
-        .section h3 {
-            margin: 0 0 15px 0;
-            color: #2d3748;
-            font-size: 1.2rem;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
-        }
-
-        .file-input {
-            padding: 12px;
-            border: 2px dashed #cbd5e0;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .file-input:hover {
-            border-color: #667eea;
-            background: #f7fafc;
-        }
-
-        .file-input input {
-            display: none;
-        }
-
-        .entity-list {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .entity-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            margin: 5px 0;
-            background: #f8fafc;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .entity-item:hover {
-            background: #e2e8f0;
-        }
-
-        .entity-item.selected {
-            border-color: #667eea;
-            background: #edf2f7;
-        }
-
-        .entity-name {
-            font-weight: 600;
-            color: #2d3748;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .entity-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            border: 2px solid #2d3748;
-            flex-shrink: 0;
-        }
-
-        .entity-population {
-            background: #667eea;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a67d8;
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-
-        .btn-danger {
-            background: #e53e3e;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c53030;
-        }
-
-        .map-controls-section {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .control-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .control-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .control-group label {
-            font-size: 0.9rem;
-            color: #4a5568;
-            font-weight: 600;
-            min-width: 20px;
-        }
-
-        .size-input {
-            width: 60px;
-            padding: 6px 8px;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .zoom-btn {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #cbd5e0;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 16px;
-            transition: all 0.2s ease;
-        }
-
-        .zoom-btn:hover {
-            background: #f7fafc;
-            border-color: #a0aec0;
-        }
-
-        .zoom-level {
-            font-size: 0.85rem;
-            color: #4a5568;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        .pan-hint {
-            font-size: 0.8rem;
-            color: #718096;
-            font-style: italic;
-        }
+        .sidebar-content { padding: 8px; }
 
         .map-viewport {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: var(--properties-width);
+            height: 100vh;
             overflow: hidden;
             cursor: grab;
-            background: #e2e8f0;
+            background: var(--bg-grid);
         }
 
-        .map-viewport.dragging {
-            cursor: grabbing;
-        }
+        .map-viewport.dragging { cursor: grabbing; }
 
         .map-container {
             position: absolute;
             transform-origin: 0 0;
-            transition: transform 0.1s ease-out;
-        }
-
-        .map-container.no-transition {
-            transition: none;
         }
 
         .map-grid {
             display: inline-grid;
             gap: 1px;
-            background: #cbd5e0;
-            border: 2px solid #a0aec0;
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: transparent;
         }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            display: none;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+        .tool-zone .resize-handle {
+            display: block;
+        }
+        .resize-top, .resize-bottom {
+            height: 10px;
+            cursor: ns-resize;
+        }
+        .resize-left, .resize-right {
+            width: 10px;
+            cursor: ew-resize;
+        }
+        .resize-handle:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+        .resize-preview {
+            position: absolute;
+            pointer-events: none;
+            display: none;
+            border-radius: 3px;
+        }
+
+        /* Cells */
+        /* Tool cursors on cells */
+        .map-viewport.tool-zone .map-cell { cursor: crosshair; }
+        .map-viewport.tool-population .map-cell { cursor: cell; }
+        .map-viewport.tool-select .map-cell { cursor: pointer; }
+
+        /* Panning overrides tool cursors */
+        .map-viewport.pan-ready, .map-viewport.pan-ready .map-cell { cursor: grab !important; }
+        .map-viewport.dragging, .map-viewport.dragging .map-cell { cursor: grabbing !important; }
 
         .map-cell {
             width: 40px;
             height: 40px;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            transition: all 0.2s ease;
-            border-radius: 3px;
-        }
-
-        .map-cell.empty {
-            background: #2d3748;
-        }
-
-        .map-cell.tile {
-            background: #48bb78;
+            border-radius: 2px;
+            background: var(--empty-cell);
         }
 
         .map-cell:hover {
-            transform: scale(1.1);
-            z-index: 10;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+            z-index: 2;
         }
 
         .population-display {
             position: absolute;
-            top: 2px;
-            left: 2px;
-            right: 2px;
-            bottom: 2px;
+            inset: 2px;
             display: none;
             pointer-events: none;
             flex-wrap: wrap;
@@ -360,9 +150,7 @@
             align-content: flex-start;
         }
 
-        .map-cell.has-population .population-display {
-            display: flex;
-        }
+        .map-cell.has-population .population-display { display: flex; }
 
         .entity-pop-box {
             min-width: 12px;
@@ -379,86 +167,302 @@
             padding: 0 1px;
         }
 
-        .tool-mode {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        /* Sections */
+        .section { margin-bottom: 10px; }
+
+        .section h3 {
+            margin: 0 0 6px 0;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 0;
+            border-bottom: none;
         }
 
-        .mode-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+        .card {
+            background: var(--panel-bg);
+            border-radius: 4px;
+            padding: 6px;
+            border: 1px solid var(--border);
         }
 
-        .mode-btn {
-            padding: 8px 16px;
-            border: 2px solid #e2e8f0;
-            background: white;
-            border-radius: 6px;
+        /* Buttons */
+        .btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 11px;
+            transition: background 0.15s;
         }
 
-        .mode-btn.active {
-            border-color: #667eea;
-            background: #667eea;
-            color: white;
-        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #F0F0F0; color: #4a5568; }
+        .btn-secondary:hover { background: #E5E5E5; }
+        .btn-danger { background: #e53e3e; color: white; }
+        .btn-danger:hover { background: #c53030; }
+        .btn-sm { padding: 3px 8px; font-size: 11px; }
 
-        .status {
-            background: #e6fffa;
-            border: 1px solid #81e6d9;
-            border-radius: 6px;
-            padding: 10px;
-            margin: 10px 0;
-            color: #234e52;
-            display: none;
-        }
-
-        .status.show {
-            display: block;
-        }
-
-        .population-counter {
+        /* Controls */
+        .control-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .control-row:last-child { margin-bottom: 0; }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .counter-btn {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #cbd5e0;
-            background: white;
-            border-radius: 4px;
+        .control-group label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 500;
+            min-width: 14px;
+        }
+
+        .size-input {
+            width: 52px;
+            padding: 3px 4px;
+            border: none;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .size-input:hover { background: #E5E5E5; }
+        .size-input:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
+
+        .zoom-controls { display: flex; align-items: center; gap: 2px; }
+
+        .zoom-btn {
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: #F0F0F0;
+            border-radius: 3px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 13px;
         }
+        .zoom-btn:hover { background: #E5E5E5; }
 
-        .counter-btn:hover {
-            background: #f7fafc;
-        }
+        .zoom-level { font-size: 11px; color: #4a5568; min-width: 38px; text-align: center; }
 
-        .population-input {
-            width: 80px;
+        .pan-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+        /* File input */
+        .file-input {
             padding: 6px;
-            border: 1px solid #cbd5e0;
+            border: 1px dashed var(--border);
             border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: var(--panel-bg);
+        }
+        .file-input:hover { border-color: var(--accent); background: #f7fafc; }
+        .file-input input { display: none; }
+        .file-input p { margin: 0; font-size: 11px; }
+        .file-input small { color: var(--text-muted); font-size: 10px; }
+
+        /* Status */
+        .status {
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-top: 4px;
+            font-size: 11px;
+            display: none;
+        }
+        .status.show { display: block; }
+        .status.success { background: #e6fffa; border: 1px solid #81e6d9; color: #234e52; }
+        .status.error { background: #fff5f5; border: 1px solid #feb2b2; color: #742a2a; }
+
+        /* Zones */
+        .zone-list { display: flex; flex-direction: column; gap: 4px; }
+
+        .zone-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            background: transparent;
+            border-radius: 3px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .zone-item:hover { background: #F0F0F0; }
+        .zone-item.selected { border-color: var(--accent); background: #EBF0FF; }
+
+        .zone-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .zone-name { flex: 1; font-weight: 500; font-size: 11px; }
+
+        .zone-id { font-size: 10px; color: var(--text-muted); margin-right: 2px; }
+
+        .zone-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #e53e3e;
+            font-size: 12px;
+            padding: 1px 3px;
+            border-radius: 3px;
+            opacity: 0.4;
+            transition: opacity 0.1s;
+        }
+        .zone-delete:hover { opacity: 1; }
+
+        .zone-add-form {
+            display: none;
+            margin-top: 4px;
+            padding: 6px;
+            background: #F8F8F8;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+        }
+        .zone-add-form.show { display: block; }
+
+        .zone-add-form .form-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        .zone-add-form .form-row:last-child { margin-bottom: 0; }
+
+        .zone-add-form input[type="text"] {
+            flex: 1;
+            padding: 3px 6px;
+            border: none;
+            border-radius: 3px;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .zone-add-form input[type="text"]:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
+
+        .zone-add-form input[type="color"] {
+            width: 28px;
+            height: 22px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 1px;
+        }
+
+        /* Entities */
+        .entity-list { display: flex; flex-direction: column; gap: 4px; }
+
+        .entity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 6px;
+            background: transparent;
+            border-radius: 3px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .entity-item:hover { background: #F0F0F0; }
+        .entity-item.selected { border-color: var(--accent); background: #EBF0FF; }
+
+        .entity-name {
+            font-weight: 500;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .entity-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .entity-population {
+            background: #F0F0F0;
+            color: var(--text);
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+            min-width: 24px;
             text-align: center;
         }
 
-        .export-area {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        /* Drawing tools */
+        .tool-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .tool-btn {
+            padding: 3px 8px;
+            border: 1px solid var(--border);
+            background: var(--panel-bg);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: background 0.1s;
         }
+        .tool-btn:hover { background: #F0F0F0; }
+        .tool-btn.active { border-color: var(--accent); background: var(--accent); color: white; }
+
+        .population-controls { margin-top: 6px; }
+
+        .population-counter {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .counter-btn {
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: #F0F0F0;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .counter-btn:hover { background: #E5E5E5; }
+
+        .population-input {
+            width: 64px;
+            padding: 3px 4px;
+            border: none;
+            border-radius: 3px;
+            text-align: center;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .population-input:hover { background: #E5E5E5; }
+        .population-input:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
 
         .section.disabled {
             opacity: 0.5;
@@ -474,133 +478,654 @@
             transform: translate(-50%, -50%);
             background: rgba(102, 126, 234, 0.9);
             color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
             white-space: nowrap;
             pointer-events: none;
         }
+
+        .eraser-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            background: transparent;
+            border-radius: 3px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.1s;
+            margin-top: 2px;
+        }
+        .eraser-item:hover { background: #F0F0F0; }
+        .eraser-item.selected { border-color: var(--accent); background: #EBF0FF; }
+
+        .eraser-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: var(--bg-grid);
+            flex-shrink: 0;
+        }
+
+        .eraser-name { font-weight: 500; font-size: 11px; color: var(--text-muted); }
+
+        /* Properties Panel (right dock) */
+        .properties-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--properties-width);
+            height: 100vh;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            z-index: 10;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+        }
+        .properties-panel.show { display: block; }
+
+        .properties-panel-header {
+            background: var(--bg-dark);
+            color: white;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        /* Cell Inspector (inside properties panel) */
+        .cell-inspector {
+            display: none;
+        }
+        .cell-inspector.show { display: block; }
+
+        .ci-header {
+            background: var(--bg-dark);
+            color: white;
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ci-header h4 {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .ci-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .ci-close:hover { opacity: 1; }
+
+        .ci-body { padding: 8px; max-height: none; overflow-y: auto; }
+
+        .ci-field { margin-bottom: 8px; }
+        .ci-field:last-child { margin-bottom: 0; }
+
+        .ci-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .ci-value {
+            font-size: 11px;
+            color: var(--text);
+        }
+
+        .ci-zone-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ci-zone-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        .ci-select {
+            flex: 1;
+            padding: 3px 6px;
+            border: none;
+            border-radius: 3px;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .ci-select:hover { background: #E5E5E5; }
+        .ci-select:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
+
+        .ci-pop-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .ci-pop-name {
+            flex: 1;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ci-pop-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 1.5px solid var(--text);
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        .ci-pop-input {
+            width: 60px;
+            flex-shrink: 0;
+            padding: 3px 4px;
+            border: none;
+            border-radius: 3px;
+            text-align: right;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .ci-pop-input:hover { background: #E5E5E5; }
+        .ci-pop-input:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
+
+        .ci-coord {
+            display: inline-block;
+            background: #F0F0F0;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-family: 'SF Mono', 'Cascadia Code', monospace;
+            font-size: 11px;
+        }
+
+        .ci-empty-note {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 11px;
+        }
+
+        /* Zone Inspector */
+        .zone-inspector {
+            display: none;
+        }
+        .zone-inspector.show { display: block; }
+
+        .zi-header {
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .zi-header h4 {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .zi-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .zi-close:hover { opacity: 1; }
+
+        .zi-body { padding: 8px; max-height: none; overflow-y: auto; }
+
+        .zi-field { margin-bottom: 8px; }
+        .zi-field:last-child { margin-bottom: 0; }
+
+        .zi-form-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zi-name-input {
+            flex: 1;
+            padding: 3px 6px;
+            border: none;
+            border-radius: 3px;
+            font-size: 11px;
+            background: #F0F0F0;
+        }
+        .zi-name-input:focus { background: #E5E5E5; outline: 1px solid var(--accent); }
+
+        .zi-color-input {
+            width: 28px;
+            height: 22px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 1px;
+        }
+
+        .map-grid.zone-focus .map-cell:not(.zone-highlighted) {
+            opacity: 0.25;
+            transition: opacity 0.2s;
+        }
+
+        .map-grid.entity-focus .map-cell:not(.entity-highlighted) {
+            opacity: 0.25;
+            transition: opacity 0.2s;
+        }
+
+        /* Entity Inspector (reuses zone-inspector layout) */
+        .entity-inspector {
+            display: none;
+        }
+        .entity-inspector.show { display: block; }
+
+        .ei-header {
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .ei-header h4 {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .ei-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .ei-close:hover { opacity: 1; }
+
+        .ei-body { padding: 8px; max-height: none; overflow-y: auto; }
+
+        /* Shortcuts Panel */
+        .shortcuts-panel {
+            display: none;
+            position: fixed;
+            right: calc(var(--properties-width) + 12px);
+            bottom: 12px;
+            z-index: 100;
+            width: 280px;
+            background: var(--panel-bg);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .shortcuts-panel.show { display: block; }
+
+        .sp-header {
+            padding: 6px 10px;
+            background: var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        .sp-header h4 { font-size: 11px; font-weight: 600; }
+        .sp-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .sp-close:hover { opacity: 1; }
+
+        .sp-body { padding: 8px; max-height: 360px; overflow-y: auto; }
+        .sp-section { margin-bottom: 8px; }
+        .sp-section:last-child { margin-bottom: 0; }
+        .sp-section h5 { font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px; }
+        .sp-row { display: flex; align-items: center; padding: 2px 0; font-size: 11px; }
+        .sp-key {
+            display: inline-block;
+            min-width: 50px;
+            padding: 1px 4px;
+            background: #F0F0F0;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-family: 'SF Mono', 'Cascadia Code', monospace;
+            font-size: 10px;
+            text-align: center;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        .sp-desc { color: var(--text); }
+
+        .btn-shortcuts {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.5;
+            transition: opacity 0.15s;
+        }
+        .btn-shortcuts:hover { opacity: 1; }
+
+        .map-cell.inspected {
+            outline: 2px solid var(--accent);
+            outline-offset: -1px;
+            z-index: 11;
+        }
+
+        .map-grid.has-focus .map-cell:not(.inspected) {
+            opacity: 0.25;
+            transition: opacity 0.15s;
+        }
+        /* Cursor tooltip */
+        .cursor-tooltip {
+            position: fixed;
+            z-index: 150;
+            pointer-events: none;
+            background: rgba(26, 32, 44, 0.92);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.78rem;
+            font-weight: 400;
+            line-height: 1.35;
+            white-space: nowrap;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+        .cursor-tooltip.show { display: block; }
+        .cursor-tooltip .ct-swatch {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 2px;
+            margin-right: 4px;
+            vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        .cursor-tooltip .ct-sub {
+            opacity: 0.8;
+        }
+        .cursor-tooltip .ct-arrow {
+            opacity: 0.7;
+        }
+
+        /* Welcome / Load Screen */
+        .welcome-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .welcome-overlay.hidden { display: none; }
+
+        .welcome-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+            padding: 40px 48px 44px;
+            max-width: 680px;
+            width: 100%;
+        }
+
+        .welcome-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .welcome-header h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .welcome-header .welcome-sub {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .welcome-info-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-style: italic;
+            font-family: Georgia, serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 16px;
+            margin-top: 4px;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+        }
+        .welcome-info-btn:hover { opacity: 1; }
+
+        .welcome-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+
+        .welcome-col .step-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .welcome-drop {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px 16px;
+        }
+        .welcome-drop:hover { border-color: var(--accent); background: #f7fafc; }
+        .welcome-drop.loaded { border-color: #48bb78; border-style: solid; background: #f0fff4; pointer-events: none; cursor: default; }
+        .welcome-drop.loaded.has-preview { pointer-events: auto; cursor: default; padding: 0; }
+        .welcome-drop input { display: none; }
+        .welcome-drop p { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text); }
+        .welcome-drop small { color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; }
+
+        .matrices-preview {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            max-height: 220px;
+        }
+        .matrices-preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #c6f6d5;
+            flex-shrink: 0;
+        }
+        .matrices-preview-header span {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #276749;
+        }
+        .matrices-preview-clear {
+            background: none;
+            border: 1px solid #c6f6d5;
+            border-radius: 4px;
+            color: #276749;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .matrices-preview-clear:hover { background: #c6f6d5; }
+        .matrices-preview-list {
+            overflow-y: auto;
+            padding: 6px 12px;
+            flex: 1;
+            min-height: 0;
+        }
+        .matrices-preview-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+        .matrices-preview-item .mp-idx {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            min-width: 18px;
+            text-align: right;
+        }
+        .matrices-preview-item .mp-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .welcome-drop.new-map {
+            border-style: solid;
+            border-color: var(--border);
+        }
+        .welcome-drop.new-map:hover { border-color: var(--accent); background: #f7fafc; }
+
+        .welcome-step1 .welcome-drop {
+            min-height: 220px;
+        }
+
+        .welcome-step2-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .welcome-step2-inner .welcome-drop {
+            min-height: 100px;
+        }
+
+        .welcome-status {
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-top: 8px;
+            font-size: 0.82rem;
+            display: none;
+        }
+        .welcome-status.show { display: block; }
+        .welcome-status.success { background: #e6fffa; border: 1px solid #81e6d9; color: #234e52; }
+        .welcome-status.error { background: #fff5f5; border: 1px solid #feb2b2; color: #742a2a; }
+
+        .welcome-step2.disabled .welcome-drop { opacity: 0.4; pointer-events: none; }
+
+        .sidebar.hidden { display: none; }
+        .map-viewport.hidden { visibility: hidden; }
+        .properties-panel.hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-content">
-            <!-- Floating Sidebar -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <h1>🌿 EcoKnow Map Editor</h1>
-                    <p>Create ecosystem maps with entity populations</p>
+    <!-- Welcome / Load Screen -->
+    <div class="welcome-overlay" id="welcome-overlay">
+        <div class="welcome-panel">
+            <div class="welcome-header">
+                <div>
+                    <h1>EcoKnow Map Editor</h1>
+                    <p class="welcome-sub">Zone-aware ecosystem map editor</p>
                 </div>
-
-                <div class="sidebar-content">
-                    <!-- Map Controls Section -->
-                    <div class="section">
-                        <h3>🗺️ Map Controls</h3>
-                        <div class="map-controls-section">
-                            <div class="control-row">
-                                <div class="control-group">
-                                    <label>W:</label>
-                                    <input type="number" id="map-width" value="10" min="1" max="100" onchange="createMap()" class="size-input" />
-                                </div>
-                                <div class="control-group">
-                                    <label>H:</label>
-                                    <input type="number" id="map-height" value="10" min="1" max="100" onchange="createMap()" class="size-input" />
-                                </div>
-                            </div>
-                            
-                            <div class="control-row">
-                                <div class="zoom-controls">
-                                    <button class="zoom-btn" onclick="zoomOut()">−</button>
-                                    <span class="zoom-level" id="zoom-level">100%</span>
-                                    <button class="zoom-btn" onclick="zoomIn()">+</button>
-                                </div>
-                                <button class="btn btn-secondary" onclick="resetView()">Reset View</button>
-                            </div>
-                            
-                            <div class="control-row">
-                                <button class="btn btn-secondary" onclick="clearMap()" style="flex: 1;">Clear Map</button>
-                            </div>
-                            
-                            <div class="pan-hint">💡 Drag to pan • Scroll to zoom</div>
-                        </div>
-                    </div>
-
-                    <!-- Load Matrices Section -->
-                    <div class="section">
-                        <h3>📊 Load Matrices</h3>
-                        <div class="file-input" onclick="document.getElementById('matrices-file').click()">
-                            <input type="file" id="matrices-file" accept=".csv" />
-                            <p>Click to load Matrices.csv</p>
-                            <small>This defines the entities and their interactions</small>
-                        </div>
-                        <div id="matrices-status" class="status"></div>
-                    </div>
-
-                    <!-- Load Map Section -->
-                    <div class="section" id="load-map-section">
-                        <h3>🗺️ Load Map</h3>
-                        <div class="file-input" onclick="document.getElementById('map-file').click()">
-                            <input type="file" id="map-file" accept=".csv" />
-                            <p>Click to load Map.csv</p>
-                            <small>Load existing map data to continue editing</small>
-                        </div>
-                        <div id="map-status" class="status"></div>
-                    </div>
-
-                    <!-- Entities Section -->
-                    <div class="section">
-                        <h3>🦊 Entities</h3>
-                        <div id="entity-list" class="entity-list">
-                            <p style="text-align: center; color: #a0aec0; margin: 20px 0;">
-                                Load a matrices file to see entities
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Drawing Tools -->
-                    <div class="section">
-                        <h3>🎨 Drawing Tools</h3>
-                        <div class="tool-mode">
-                            <div class="mode-buttons">
-                                <div class="mode-btn active" data-mode="terrain">Terrain</div>
-                                <div class="mode-btn" data-mode="population">Population</div>
-                            </div>
-                            
-                            <div id="terrain-controls">
-                                <button class="btn btn-secondary" onclick="setDrawMode('tile')">Draw Tiles</button>
-                                <button class="btn btn-secondary" onclick="setDrawMode('empty')">Erase</button>
-                            </div>
-
-                            <div id="population-controls" style="display: none;">
-                                <p><strong>Selected Entity:</strong> <span id="selected-entity">None</span></p>
-                                <div class="population-counter">
-                                    <button class="counter-btn" onclick="adjustPopulation(-1)">-</button>
-                                    <input type="number" id="population-value" class="population-input" value="1" min="0" max="999999999" />
-                                    <button class="counter-btn" onclick="adjustPopulation(1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Export Section -->
-                    <div class="section">
-                        <h3>💾 Export</h3>
-                        <div class="export-area">
-                            <button class="btn btn-primary" onclick="exportMap()" style="width: 100%;">
-                                Download Map.csv
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <a class="welcome-info-btn" href="https://ecoknowgames.github.io/" target="_blank" rel="noopener" title="About">i</a>
             </div>
-
-            <!-- Full-Screen Map Area -->
-            <div class="map-area">
-                <div class="map-viewport" id="map-viewport">
-                    <div class="map-container" id="map-container">
-                        <div id="map-grid" class="map-grid">
-                            <!-- Grid cells will be generated here -->
+            <div class="welcome-columns">
+                <div class="welcome-col welcome-step1">
+                    <div class="step-label">Step 1</div>
+                    <div class="welcome-drop" id="wfi-matrices">
+                        <input type="file" id="w-matrices-file" accept=".csv" />
+                        <p>Add Matrices CSV</p>
+                        <small>Defines the entities and their interactions</small>
+                    </div>
+                    <div id="w-matrices-status" class="welcome-status"></div>
+                </div>
+                <div class="welcome-col welcome-step2 disabled" id="welcome-step2">
+                    <div class="step-label">Step 2</div>
+                    <div class="welcome-step2-inner">
+                        <div class="welcome-drop" id="wfi-map">
+                            <input type="file" id="w-map-file" accept=".csv" />
+                            <p>Load Existing Map</p>
+                            <small>Loads existing map data (supports old + new format)</small>
+                        </div>
+                        <div id="w-map-status" class="welcome-status"></div>
+                        <div class="welcome-drop new-map" id="wfi-new-map">
+                            <p>Create New Map</p>
+                            <small>Start with a blank 10 &times; 10 grid</small>
                         </div>
                     </div>
                 </div>
@@ -608,105 +1133,1794 @@
         </div>
     </div>
 
+    <div class="sidebar hidden" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <h1>EcoKnow Map Editor</h1>
+                <button class="btn-shortcuts" id="btn-shortcuts" title="Keyboard Shortcuts (?)">?</button>
+            </div>
+            <p>Zone-aware ecosystem map editor</p>
+        </div>
+
+        <div class="sidebar-content">
+            <!-- 1. Map Controls -->
+            <div class="section">
+                <h3>Map Controls</h3>
+                <div class="card">
+                    <div class="control-row">
+                        <input type="text" id="map-name" value="Map" placeholder="Map name" style="flex:1;padding:3px 6px;border:none;border-radius:3px;font-size:11px;background:#F0F0F0;" />
+                    </div>
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label>W:</label>
+                            <input type="number" id="map-width" value="10" min="1" max="100" class="size-input" />
+                        </div>
+                        <div class="control-group">
+                            <label>H:</label>
+                            <input type="number" id="map-height" value="10" min="1" max="100" class="size-input" />
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-resize">Apply</button>
+                    </div>
+                    <div class="control-row">
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" id="btn-zoom-out">&minus;</button>
+                            <span class="zoom-level" id="zoom-level">100%</span>
+                            <button class="zoom-btn" id="btn-zoom-in">+</button>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-reset-view">Reset (R)</button>
+                        <button class="btn btn-secondary btn-sm" id="btn-fill-view">Fill (F)</button>
+                    </div>
+                    <div class="control-row">
+                        <button class="btn btn-primary btn-sm" id="btn-export" style="flex:1;">Export Map</button>
+                        <button class="btn btn-danger btn-sm" id="btn-clear" style="flex:1;">New Session</button>
+                    </div>
+                    <div class="pan-hint">Drag to pan / Scroll to zoom</div>
+                </div>
+            </div>
+
+            <!-- 2. Drawing Tools -->
+            <div class="section">
+                <h3>Drawing Tools</h3>
+                <div class="card">
+                    <div class="tool-buttons">
+                        <div class="tool-btn" data-mode="zone">Zone Brush (Z)</div>
+                        <div class="tool-btn" data-mode="population">Entity (E)</div>
+                        <div class="tool-btn active" data-mode="select">Select (S)</div>
+                        <div class="tool-btn" data-mode="pan">Pan (Space)</div>
+                    </div>
+                    <div id="population-controls" class="population-controls" style="display:none;">
+                        <p><strong>Entity:</strong> <span id="selected-entity">None</span></p>
+                        <div class="population-counter">
+                            <button class="counter-btn" id="btn-pop-minus">&minus;</button>
+                            <input type="number" id="population-value" class="population-input" value="1" min="0" max="999999999" />
+                            <button class="counter-btn" id="btn-pop-plus">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Zones -->
+            <div class="section" id="section-zones">
+                <h3>Zones</h3>
+                <div class="card">
+                    <div class="zone-list" id="zone-list">
+                        <p style="text-align:center;color:#a0aec0;font-size:11px;">No zones defined yet</p>
+                    </div>
+                    <div class="eraser-item" id="eraser-tool" title="Empty: set cells to empty (-1)">
+                        <div class="eraser-swatch" id="empty-swatch"></div>
+                        <span class="eraser-name">Empty (0)</span>
+                        <input type="color" id="map-bg-color" value="#222a5f" title="Empty cell colour" style="width:22px;height:18px;border:1px solid var(--border);border-radius:3px;cursor:pointer;padding:1px;margin-left:auto;" />
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btn-add-zone" style="width:100%;margin-top:4px;">+ Add Zone</button>
+                    <div class="zone-add-form" id="zone-add-form">
+                        <div class="form-row">
+                            <input type="text" id="new-zone-name" placeholder="Zone name" />
+                            <input type="color" id="new-zone-color" value="#48bb78" />
+                        </div>
+                        <div class="form-row">
+                            <button class="btn btn-primary btn-sm" id="btn-confirm-zone" style="flex:1;">Add</button>
+                            <button class="btn btn-secondary btn-sm" id="btn-cancel-zone">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Entities -->
+            <div class="section" id="section-entities">
+                <h3>Entities</h3>
+                <div id="entity-list" class="card">
+                    <p style="text-align:center;color:#a0aec0;font-size:11px;margin:10px 0;">Load a matrices file to see entities</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="cursor-tooltip" id="cursor-tooltip"></div>
+
+    <div class="map-viewport hidden" id="map-viewport">
+        <div class="map-container" id="map-container">
+            <div id="map-grid" class="map-grid"></div>
+            <div class="resize-handle resize-top" data-edge="top"></div>
+            <div class="resize-handle resize-bottom" data-edge="bottom"></div>
+            <div class="resize-handle resize-left" data-edge="left"></div>
+            <div class="resize-handle resize-right" data-edge="right"></div>
+            <div id="resize-preview" class="resize-preview"></div>
+        </div>
+    </div>
+
+    <div class="properties-panel hidden" id="properties-panel">
+        <div class="cell-inspector" id="cell-inspector">
+            <div class="ci-header">
+                <h4 id="ci-title">Cell</h4>
+                <button class="ci-close" id="ci-close">&times;</button>
+            </div>
+            <div class="ci-body" id="ci-body"></div>
+        </div>
+
+        <div class="zone-inspector" id="zone-inspector">
+            <div class="zi-header" id="zi-header">
+                <h4 id="zi-title">Zone</h4>
+                <button class="zi-close" id="zi-close">&times;</button>
+            </div>
+            <div class="zi-body" id="zi-body"></div>
+        </div>
+
+        <div class="entity-inspector" id="entity-inspector">
+            <div class="ei-header" id="ei-header">
+                <h4 id="ei-title">Entity</h4>
+                <button class="ei-close" id="ei-close">&times;</button>
+            </div>
+            <div class="ei-body" id="ei-body"></div>
+        </div>
+    </div>
+
+    <div class="shortcuts-panel" id="shortcuts-panel">
+        <div class="sp-header">
+            <h4>Keyboard Shortcuts</h4>
+            <button class="sp-close" id="sp-close">&times;</button>
+        </div>
+        <div class="sp-body">
+            <div class="sp-section">
+                <h5>General</h5>
+                <div class="sp-row"><span class="sp-key">?</span><span class="sp-desc">Toggle this panel</span></div>
+                <div class="sp-row"><span class="sp-key">Ctrl+Z</span><span class="sp-desc">Undo</span></div>
+                <div class="sp-row"><span class="sp-key">Space</span><span class="sp-desc">Pan (hold)</span></div>
+                <div class="sp-row"><span class="sp-key">Esc</span><span class="sp-desc">Deselect / close inspectors</span></div>
+                <div class="sp-row"><span class="sp-key">R</span><span class="sp-desc">Reset view</span></div>
+                <div class="sp-row"><span class="sp-key">F</span><span class="sp-desc">Fill view</span></div>
+                <div class="sp-row"><span class="sp-key">Z</span><span class="sp-desc">Zone tool</span></div>
+                <div class="sp-row"><span class="sp-key">E</span><span class="sp-desc">Entity tool</span></div>
+                <div class="sp-row"><span class="sp-key">S</span><span class="sp-desc">Select tool</span></div>
+            </div>
+            <div class="sp-section">
+                <h5>Zone Mode</h5>
+                <div class="sp-row"><span class="sp-key">0</span><span class="sp-desc">Eraser</span></div>
+                <div class="sp-row"><span class="sp-key">1-9</span><span class="sp-desc">Select zone by number</span></div>
+            </div>
+            <div class="sp-section">
+                <h5>Entity Mode</h5>
+                <div class="sp-row"><span class="sp-key">1-9</span><span class="sp-desc">Select entity by number</span></div>
+                <div class="sp-row"><span class="sp-key">= / +</span><span class="sp-desc">Population +1 / +10</span></div>
+                <div class="sp-row"><span class="sp-key">- / _</span><span class="sp-desc">Population −1 / −10</span></div>
+                <div class="sp-row"><span class="sp-key">[ / ]</span><span class="sp-desc">Population −10 / +10</span></div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Global state
-        let entities = [];
-        let mapData = [];
+    (() => {
+        // ── State ──────────────────────────────────────────────
+        let zones = [];            // [{id, name, colour}]
+        let entities = [];         // [{name, index}]
+        let mapData = [];          // 2D: [{zoneId, populations:[]}]
+        let selectedZoneId = null; // null = eraser, number = zone brush
         let selectedEntity = null;
-        let drawMode = 'tile'; // 'tile' or 'empty'
-        let toolMode = 'terrain'; // 'terrain' or 'population'
+        let toolMode = 'select';   // 'zone' | 'population' | 'select'
         let populationValue = 1;
+        let entityPopulationValues = {};
         let isDrawing = false;
-        let entityPopulationValues = {}; // Remember population values per entity
+        let useEraser = false;
+        let mapBgColour = '#222a5f';
 
-        // Pan and zoom state
-        let panX = 0;
-        let panY = 0;
-        let zoom = 1;
-        let isPanning = false;
-        let lastPanX = 0;
-        let lastPanY = 0;
+        // Undo
+        const undoStack = [];       // [{cells: [{x, y, zoneId, populations}]}]
+        const MAX_UNDO = 50;
+        let currentStroke = null;   // accumulates changed cells during a paint stroke
 
-        // Entity colors - bright, distinct colors
+        // Pan / zoom
+        let panX = 0, panY = 0, zoom = 1;
+        let isPanning = false, lastPanX = 0, lastPanY = 0;
+        let spaceHeld = false;
+        let preSpaceToolMode = null;
+
+        // Entity display colours
         const entityColors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F',
-            '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA', '#F1948A', '#AED6F1'
+            '#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F',
+            '#BB8FCE','#85C1E9','#F8C471','#82E0AA','#F1948A','#AED6F1'
+        ];
+        const entityColorOverrides = {};
+        const getEntityColor = i => entityColorOverrides[i] || entityColors[i % entityColors.length];
+
+        const defaultZonePresets = [
+            { name: 'Land',     colour: '#48bb78' },
+            { name: 'Water',    colour: '#4299e1' },
+            { name: 'Mountain', colour: '#a0aec0' },
         ];
 
-        function getEntityColor(index) {
-            return entityColors[index % entityColors.length];
+        // ── Helpers ────────────────────────────────────────────
+        function formatNumber(n) {
+            if (n >= 1e9) return '~' + (n / 1e9).toFixed(1) + 'B';
+            if (n >= 1e6) return '~' + (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return '~' + (n / 1e3).toFixed(1) + 'K';
+            return String(n);
         }
 
-        function formatNumber(num) {
-            if (num >= 1000000000) {
-                return '~' + (num / 1000000000).toFixed(1) + 'B';
-            } else if (num >= 1000000) {
-                return '~' + (num / 1000000).toFixed(1) + 'M';
-            } else if (num >= 1000) {
-                return '~' + (num / 1000).toFixed(1) + 'K';
+        function nextZoneId() {
+            if (zones.length === 0) return 0;
+            return Math.max(...zones.map(z => z.id)) + 1;
+        }
+
+        function setMapBg(colour) {
+            mapBgColour = colour;
+            document.getElementById('map-viewport').style.background = colour;
+            document.getElementById('map-bg-color').value = colour;
+            // Update the empty swatch preview
+            const swatch = document.getElementById('empty-swatch');
+            if (swatch) swatch.style.background = colour;
+            // Refresh empty cells to match
+            updateAllCells();
+        }
+
+        function showStatus(id, msg, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = msg;
+            // Support both sidebar .status and welcome-screen .welcome-status
+            const base = el.classList.contains('welcome-status') ? 'welcome-status' : 'status';
+            el.className = `${base} show ${type}`;
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // ── Zone Management ────────────────────────────────────
+        function addZone(name, colour) {
+            const id = nextZoneId();
+            zones.push({ id, name, colour });
+            renderZoneList();
+            selectZone(id);
+            return id;
+        }
+
+        function removeZone(id) {
+            zones = zones.filter(z => z.id !== id);
+            // Clear cells that used this zone
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x].zoneId === id) {
+                        mapData[y][x].zoneId = -1;
+                        mapData[y][x].populations = entities.map(() => 0);
+                    }
+                }
             }
-            return num.toString();
+            if (selectedZoneId === id) {
+                selectedZoneId = zones.length > 0 ? zones[0].id : null;
+                useEraser = zones.length === 0;
+            }
+            renderZoneList();
+            createMapVisual();
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            createMap();
-            setupEventListeners();
-            updateZoomDisplay();
-            updateMapLoadingState(); // Check if map loading should be enabled
-        });
+        function mergeZone(sourceId, targetId) {
+            // Reassign all cells from source zone to target zone (keeps populations)
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x].zoneId === sourceId) {
+                        mapData[y][x].zoneId = targetId;
+                    }
+                }
+            }
+            // Remove the source zone
+            zones = zones.filter(z => z.id !== sourceId);
+            if (selectedZoneId === sourceId) {
+                selectedZoneId = targetId;
+            }
+            closeZoneInspector();
+            renderZoneList();
+            createMapVisual();
+        }
 
-        function setupEventListeners() {
-            // File inputs
-            document.getElementById('matrices-file').addEventListener('change', loadMatrices);
-            document.getElementById('map-file').addEventListener('change', loadMap);
+        function selectZone(id) {
+            selectedZoneId = id;
+            useEraser = false;
+            if (toolMode !== 'zone') switchToolMode('zone');
+            renderZoneList();
+        }
 
-            // Tool mode switching
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const mode = this.dataset.mode;
-                    switchToolMode(mode);
+        function selectEraser() {
+            useEraser = true;
+            selectedZoneId = null;
+            if (toolMode !== 'zone') switchToolMode('zone');
+            renderZoneList();
+        }
+
+        function getZone(id) {
+            return zones.find(z => z.id === id);
+        }
+
+        function renderZoneList() {
+            const container = document.getElementById('zone-list');
+            if (zones.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#a0aec0;font-size:11px;">No zones defined yet</p>';
+            } else {
+                container.innerHTML = zones.map(z => `
+                    <div class="zone-item${!useEraser && selectedZoneId === z.id ? ' selected' : ''}" data-zone-id="${z.id}">
+                        <div class="zone-swatch" style="background:${z.colour}"></div>
+                        <span class="zone-name">${z.name}</span>
+                        <span class="zone-id">#${z.id}</span>
+                        <button class="zone-delete" data-zone-info="${z.id}" title="Zone info" style="color:var(--accent);opacity:0.6;">i</button>
+                        <button class="zone-delete" data-zone-del="${z.id}" title="Delete zone">&times;</button>
+                    </div>
+                `).join('');
+
+                // Click handlers
+                container.querySelectorAll('.zone-item').forEach(el => {
+                    el.addEventListener('click', e => {
+                        if (e.target.classList.contains('zone-delete')) return;
+                        selectZone(parseInt(el.dataset.zoneId));
+                    });
+                });
+                container.querySelectorAll('[data-zone-del]').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.stopPropagation();
+                        removeZone(parseInt(el.dataset.zoneDel));
+                    });
+                });
+                container.querySelectorAll('[data-zone-info]').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.stopPropagation();
+                        openZoneInspector(parseInt(el.dataset.zoneInfo), el);
+                    });
+                });
+            }
+
+            // Eraser highlight
+            const eraserEl = document.getElementById('eraser-tool');
+            eraserEl.classList.toggle('selected', useEraser);
+        }
+
+        // ── Entity List ────────────────────────────────────────
+        function renderEntityList() {
+            const container = document.getElementById('entity-list');
+            if (entities.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#a0aec0;font-size:11px;margin:10px 0;">Load a matrices file to see entities</p>';
+                return;
+            }
+
+            const totals = entities.map(() => 0);
+            for (const row of mapData) {
+                for (const cell of row) {
+                    if (cell.zoneId >= 0) {
+                        cell.populations.forEach((p, i) => { totals[i] += p; });
+                    }
+                }
+            }
+
+            container.innerHTML = '<div class="entity-list">' + entities.map((ent, i) => `
+                <div class="entity-item${selectedEntity === i ? ' selected' : ''}" data-ent-idx="${i}">
+                    <span class="entity-name">
+                        <div class="entity-color" style="background:${getEntityColor(i)}"></div>
+                        ${ent.name}
+                        <button class="zone-delete" data-ent-info="${i}" title="Entity info" style="color:var(--accent);opacity:0.6;margin-left:auto;">i</button>
+                    </span>
+                    <span class="entity-population">${formatNumber(totals[i])}</span>
+                </div>
+            `).join('') + '</div>';
+
+            container.querySelectorAll('.entity-item').forEach(el => {
+                el.addEventListener('click', e => {
+                    if (e.target.closest('[data-ent-info]')) return;
+                    selectEntityByIndex(parseInt(el.dataset.entIdx));
+                });
+            });
+            container.querySelectorAll('[data-ent-info]').forEach(el => {
+                el.addEventListener('click', e => {
+                    e.stopPropagation();
+                    openEntityInspector(parseInt(el.dataset.entInfo), el);
+                });
+            });
+        }
+
+        function selectEntityByIndex(idx) {
+            if (selectedEntity !== null) {
+                entityPopulationValues[selectedEntity] = populationValue;
+            }
+            selectedEntity = idx;
+            populationValue = entityPopulationValues[idx] || 1;
+            document.getElementById('population-value').value = populationValue;
+            document.getElementById('selected-entity').textContent = entities[idx].name;
+            if (toolMode !== 'population') switchToolMode('population');
+            renderEntityList();
+        }
+
+        // ── Tool Mode ──────────────────────────────────────────
+        function switchToolMode(mode) {
+            toolMode = mode;
+            hideCursorTooltip();
+            document.querySelectorAll('.tool-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.mode === mode));
+            document.getElementById('population-controls').style.display =
+                mode === 'population' ? 'block' : 'none';
+            if (mode === 'population' && selectedEntity === null && entities.length > 0) {
+                selectEntityByIndex(0);
+            }
+            if (mode !== 'select') closeInspector();
+            if (mode !== 'population') closeEntityInspector();
+            if (mode !== 'zone') closeZoneInspector();
+
+            // Show/hide Zones and Entities sections based on mode
+            const zonesSection = document.getElementById('section-zones');
+            const entitiesSection = document.getElementById('section-entities');
+            if (zonesSection) zonesSection.style.display = mode === 'zone' ? '' : 'none';
+            if (entitiesSection) entitiesSection.style.display = mode === 'population' ? '' : 'none';
+
+            // Update cursor
+            const vp = document.getElementById('map-viewport');
+            vp.classList.remove('tool-zone', 'tool-population', 'tool-select', 'tool-pan');
+            if (mode === 'pan') {
+                vp.classList.add('pan-ready');
+            } else {
+                vp.classList.remove('pan-ready');
+                vp.classList.add('tool-' + mode);
+            }
+        }
+
+        // ── Cursor Tooltip ─────────────────────────────────────
+        const cursorTooltip = { el: null, lastCellKey: '', lastEvent: null };
+
+        function refreshCursorTooltip() {
+            if (cursorTooltip.lastEvent) {
+                cursorTooltip.lastCellKey = ''; // invalidate cache
+                updateCursorTooltip(cursorTooltip.lastEvent);
+            }
+        }
+
+        function updateCursorTooltip(e) {
+            cursorTooltip.lastEvent = e;
+            const tip = cursorTooltip.el || (cursorTooltip.el = document.getElementById('cursor-tooltip'));
+            if (!tip) return;
+
+            // Position: offset from cursor, flip if near edge
+            let tx = e.clientX + 14;
+            let ty = e.clientY + 14;
+            const tw = tip.offsetWidth || 100;
+            const th = tip.offsetHeight || 30;
+            if (tx + tw > window.innerWidth - 4) tx = e.clientX - tw - 8;
+            if (ty + th > window.innerHeight - 4) ty = e.clientY - th - 8;
+            tip.style.left = tx + 'px';
+            tip.style.top = ty + 'px';
+
+            // Only show for zone/population modes over a cell
+            if (toolMode !== 'zone' && toolMode !== 'population') {
+                tip.classList.remove('show');
+                return;
+            }
+
+            const cell = e.target.closest('.map-cell');
+            if (!cell) {
+                tip.classList.remove('show');
+                return;
+            }
+
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+            const cacheKey = `${toolMode}|${x},${y}|${selectedZoneId}|${useEraser}|${selectedEntity}|${populationValue}`;
+            if (cacheKey === cursorTooltip.lastCellKey) {
+                tip.classList.add('show');
+                return;
+            }
+            cursorTooltip.lastCellKey = cacheKey;
+
+            const d = mapData[y] && mapData[y][x];
+            if (!d) { tip.classList.remove('show'); return; }
+
+            let html = '';
+
+            if (toolMode === 'zone') {
+                if (useEraser) {
+                    // No tooltip for eraser
+                } else if (selectedZoneId !== null) {
+                    const z = getZone(selectedZoneId);
+                    html = z ? `<span class="ct-swatch" style="background:${z.colour}"></span>${z.name}` : '';
+                }
+            } else if (toolMode === 'population' && selectedEntity !== null) {
+                const ent = entities[selectedEntity];
+                if (!ent) { tip.classList.remove('show'); return; }
+                const currentPop = d.populations[selectedEntity] || 0;
+                html = `${ent.name}<br><span class="ct-sub">`;
+                if (currentPop === populationValue) {
+                    html += `Currently ${currentPop}`;
+                } else {
+                    html += `${currentPop} <span class="ct-arrow">&rarr;</span> ${populationValue}`;
+                }
+                html += '</span>';
+            }
+
+            if (html) {
+                tip.innerHTML = html;
+                tip.classList.add('show');
+            } else {
+                tip.classList.remove('show');
+            }
+        }
+
+        function hideCursorTooltip() {
+            const tip = cursorTooltip.el || document.getElementById('cursor-tooltip');
+            if (tip) { tip.classList.remove('show'); cursorTooltip.lastCellKey = ''; }
+        }
+
+        // ── Grid Creation ──────────────────────────────────────
+        function createMap() {
+            const w = parseInt(document.getElementById('map-width').value) || 10;
+            const h = parseInt(document.getElementById('map-height').value) || 10;
+            const old = mapData;
+            const oldW = old.length > 0 ? old[0].length : 0;
+            const oldH = old.length;
+
+            mapData = Array.from({ length: h }, (_, y) =>
+                Array.from({ length: w }, (_, x) => {
+                    if (y < oldH && x < oldW && old[y][x]) {
+                        const c = old[y][x];
+                        const pops = entities.map((_, i) => (c.populations[i] || 0));
+                        return { zoneId: c.zoneId, populations: pops };
+                    }
+                    return { zoneId: -1, populations: entities.map(() => 0) };
+                })
+            );
+            createMapVisual();
+            renderEntityList();
+        }
+
+        function createMapVisual() {
+            closeInspector();
+            const grid = document.getElementById('map-grid');
+            const h = mapData.length;
+            const w = h > 0 ? mapData[0].length : 0;
+            grid.style.gridTemplateColumns = `repeat(${w}, 40px)`;
+            grid.innerHTML = '';
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'map-cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+
+                    const popDisplay = document.createElement('div');
+                    popDisplay.className = 'population-display';
+                    cell.appendChild(popDisplay);
+
+                    cell.addEventListener('mousedown', onCellMouseDown);
+                    cell.addEventListener('mouseenter', onCellDrag);
+                    grid.appendChild(cell);
+
+                    applyCellStyle(cell, x, y);
+                }
+            }
+            updateMapTransform();
+            positionResizeHandles();
+        }
+
+        function applyCellStyle(cell, x, y) {
+            const d = mapData[y][x];
+            const zone = getZone(d.zoneId);
+            cell.style.background = zone ? zone.colour : mapBgColour;
+
+            const popDisplay = cell.querySelector('.population-display');
+            if (!entities.length || d.zoneId < 0) {
+                cell.classList.remove('has-population');
+                popDisplay.innerHTML = '';
+                return;
+            }
+
+            const present = entities
+                .map((ent, i) => ({ name: ent.name, pop: d.populations[i] || 0, color: getEntityColor(i) }))
+                .filter(e => e.pop > 0);
+
+            if (present.length > 0) {
+                cell.classList.add('has-population');
+                popDisplay.innerHTML = present.map(e =>
+                    `<div class="entity-pop-box" style="background:${e.color}">${formatNumber(e.pop)}</div>`
+                ).join('');
+            } else {
+                cell.classList.remove('has-population');
+                popDisplay.innerHTML = '';
+            }
+        }
+
+        function updateAllCells() {
+            const h = mapData.length;
+            const w = h > 0 ? mapData[0].length : 0;
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+                    if (cell) applyCellStyle(cell, x, y);
+                }
+            }
+        }
+
+        // ── Cell Painting ──────────────────────────────────────
+        function onCellMouseDown(e) {
+            if (isPanning || spaceHeld || toolMode === 'pan') return;
+            const cell = e.target.closest('.map-cell');
+            if (!cell) return;
+            if (toolMode === 'select') {
+                if (inspectedCell === cell) {
+                    closeInspector();
+                } else {
+                    openInspector(cell, e);
+                }
+            } else {
+                isDrawing = true;
+                currentStroke = { cells: new Map() }; // key: "x,y" → before-state
+                paintCell(cell);
+            }
+            e.preventDefault();
+        }
+
+        function onCellDrag(e) {
+            if (isDrawing && e.buttons === 1 && !isPanning) {
+                paintCell(e.target.closest('.map-cell'));
+            }
+        }
+
+        function finishStroke() {
+            if (currentStroke && currentStroke.cells.size > 0) {
+                undoStack.push({ cells: Array.from(currentStroke.cells.values()) });
+                if (undoStack.length > MAX_UNDO) undoStack.shift();
+            }
+            currentStroke = null;
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            const stroke = undoStack.pop();
+            for (const snap of stroke.cells) {
+                const d = mapData[snap.y][snap.x];
+                d.zoneId = snap.zoneId;
+                d.populations = [...snap.populations];
+                const cell = document.querySelector(`[data-x="${snap.x}"][data-y="${snap.y}"]`);
+                if (cell) applyCellStyle(cell, snap.x, snap.y);
+            }
+            renderEntityList();
+        }
+
+        function paintCell(cell) {
+            if (!cell) return;
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+            const d = mapData[y][x];
+
+            // Record before-state (only first touch per cell per stroke)
+            const key = x + ',' + y;
+            if (currentStroke && !currentStroke.cells.has(key)) {
+                currentStroke.cells.set(key, {
+                    x, y, zoneId: d.zoneId, populations: [...d.populations]
+                });
+            }
+
+            if (toolMode === 'zone') {
+                if (useEraser) {
+                    d.zoneId = -1;
+                    d.populations = entities.map(() => 0);
+                } else if (selectedZoneId !== null) {
+                    d.zoneId = selectedZoneId;
+                }
+            } else if (toolMode === 'population' && selectedEntity !== null) {
+                // Auto-place default zone if cell is empty
+                if (d.zoneId < 0) {
+                    if (zones.length > 0) {
+                        d.zoneId = zones[0].id;
+                    } else {
+                        return; // no zones to place on
+                    }
+                }
+                d.populations[selectedEntity] = populationValue;
+            }
+
+            applyCellStyle(cell, x, y);
+            renderEntityList();
+            refreshCursorTooltip();
+        }
+
+        // ── Cell Inspector ─────────────────────────────────────
+        let inspectedCell = null;
+
+        function openInspector(cell, mouseEvent) {
+            closeInspector();
+            closeEntityInspector();
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+            const d = mapData[y][x];
+
+            inspectedCell = cell;
+            cell.classList.add('inspected');
+            document.getElementById('map-grid').classList.add('has-focus');
+
+            const panel = document.getElementById('cell-inspector');
+            document.getElementById('ci-title').textContent = `Cell (${x}, ${y})`;
+
+            let html = '';
+            const zone = getZone(d.zoneId);
+
+            // Total population (top)
+            if (d.zoneId >= 0 && entities.length > 0) {
+                const total = d.populations.reduce((s, v) => s + v, 0);
+                html += `<div class="ci-field">
+                    <div class="ci-label">Total Population</div>
+                    <div class="ci-value" id="ci-total">${formatNumber(total)}</div>
+                </div>`;
+            }
+
+            // Coordinates
+            html += `<div class="ci-field">
+                <div class="ci-label">Position</div>
+                <div class="ci-value"><span class="ci-coord">x: ${x}</span> <span class="ci-coord">y: ${y}</span></div>
+            </div>`;
+
+            // Zone
+            html += `<div class="ci-field">
+                <div class="ci-label">Zone</div>
+                <div class="ci-zone-row">
+                    <div class="ci-zone-swatch" id="ci-zone-swatch" style="background:${zone ? zone.colour : mapBgColour}"></div>
+                    <select class="ci-select" id="ci-zone-select">
+                        <option value="-1"${d.zoneId < 0 ? ' selected' : ''}>Empty (-1)</option>
+                        ${zones.map(z => `<option value="${z.id}"${z.id === d.zoneId ? ' selected' : ''}>${z.name} (#${z.id})</option>`).join('')}
+                    </select>
+                </div>
+            </div>`;
+
+            // Populations
+            if (entities.length > 0) {
+                html += `<div class="ci-field">
+                    <div class="ci-label">Populations</div>`;
+                if (d.zoneId >= 0) {
+                    entities.forEach((ent, i) => {
+                        html += `<div class="ci-pop-row">
+                            <div class="ci-pop-name"><span class="ci-pop-swatch" style="background:${getEntityColor(i)}"></span> ${ent.name}</div>
+                            <input type="number" class="ci-pop-input" data-ent-idx="${i}" value="${d.populations[i] || 0}" min="0" max="999999999" />
+                        </div>`;
+                    });
+                } else {
+                    html += `<div class="ci-empty-note">Assign a zone to edit populations</div>`;
+                }
+                html += `</div>`;
+            }
+
+            document.getElementById('ci-body').innerHTML = html;
+
+            // Show in the docked properties panel
+            panel.classList.add('show');
+            showPropertiesPanel();
+
+            // Wire up zone dropdown
+            const zoneSelect = document.getElementById('ci-zone-select');
+            zoneSelect.addEventListener('change', () => {
+                const newId = parseInt(zoneSelect.value);
+                d.zoneId = newId;
+                if (newId < 0) d.populations = entities.map(() => 0);
+                const z = getZone(newId);
+                document.getElementById('ci-zone-swatch').style.background = z ? z.colour : 'var(--empty-cell)';
+                applyCellStyle(cell, x, y);
+                renderEntityList();
+                // Refresh body to show/hide population fields
+                openInspector(cell, mouseEvent);
+            });
+
+            // Wire up population inputs and +/- buttons
+            const updatePop = (idx, val) => {
+                d.populations[idx] = Math.max(0, Math.min(999999999, val));
+                const inp = document.querySelector(`.ci-pop-input[data-ent-idx="${idx}"]`);
+                if (inp) inp.value = d.populations[idx];
+                applyCellStyle(cell, x, y);
+                renderEntityList();
+                const totalEl = document.getElementById('ci-total');
+                if (totalEl) totalEl.textContent = formatNumber(d.populations.reduce((s, v) => s + v, 0));
+            };
+
+            document.querySelectorAll('.ci-pop-input').forEach(inp => {
+                inp.addEventListener('input', () => {
+                    updatePop(parseInt(inp.dataset.entIdx), parseInt(inp.value) || 0);
                 });
             });
 
-            // Population input - handle both change and input events
-            const populationInput = document.getElementById('population-value');
-            
-            populationInput.addEventListener('input', function() {
-                populationValue = parseInt(this.value) || 0;
-                
-                // Save the new value for the current entity
-                if (selectedEntity !== null) {
-                    entityPopulationValues[selectedEntity] = populationValue;
-                }
-            });
-            
-            populationInput.addEventListener('change', function() {
-                populationValue = parseInt(this.value) || 0;
-                
-                // Save the new value for the current entity
-                if (selectedEntity !== null) {
-                    entityPopulationValues[selectedEntity] = populationValue;
-                }
-            });
-
-            // Pan and zoom controls
-            setupPanZoomControls();
         }
 
-        function setupPanZoomControls() {
-            const viewport = document.getElementById('map-viewport');
-            
-            // Mouse wheel zoom
-            viewport.addEventListener('wheel', function(e) {
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                setZoom(zoom + delta);
+        function showPropertiesPanel() {
+            document.getElementById('properties-panel').classList.add('show');
+            document.getElementById('properties-panel').classList.remove('hidden');
+        }
+
+        function hidePropertiesPanel() {
+            const pp = document.getElementById('properties-panel');
+            // Hide if nothing is shown inside
+            const anyOpen = pp.querySelector('.cell-inspector.show, .zone-inspector.show, .entity-inspector.show');
+            if (!anyOpen) {
+                pp.classList.remove('show');
+            }
+        }
+
+        function setupInspectorDrag() {
+            // No-op: inspectors are now docked in the properties panel
+        }
+
+        function closeInspector() {
+            document.getElementById('cell-inspector').classList.remove('show');
+            document.getElementById('map-grid').classList.remove('has-focus');
+            if (inspectedCell) {
+                inspectedCell.classList.remove('inspected');
+                inspectedCell = null;
+            }
+            hidePropertiesPanel();
+        }
+
+        // ── Zone Inspector ─────────────────────────────────────
+        let inspectedZoneId = null;
+
+        function openZoneInspector(zoneId, anchorEl) {
+            closeZoneInspector();
+            closeInspector();
+            closeEntityInspector();
+            const zone = getZone(zoneId);
+            if (!zone) return;
+            inspectedZoneId = zoneId;
+
+            const panel = document.getElementById('zone-inspector');
+            const header = document.getElementById('zi-header');
+            header.style.background = zone.colour;
+            // Use white or dark text depending on luminance
+            const lum = hexLuminance(zone.colour);
+            header.style.color = lum > 0.5 ? '#1a202c' : 'white';
+            document.getElementById('zi-title').textContent = zone.name;
+
+            // Highlight cells of this zone, fade others
+            const grid = document.getElementById('map-grid');
+            grid.classList.add('zone-focus');
+            grid.querySelectorAll('.map-cell').forEach(cell => {
+                const cx = parseInt(cell.dataset.x);
+                const cy = parseInt(cell.dataset.y);
+                if (mapData[cy][cx].zoneId === zoneId) {
+                    cell.classList.add('zone-highlighted');
+                } else {
+                    cell.classList.remove('zone-highlighted');
+                }
             });
 
-            // Pan controls
-            viewport.addEventListener('mousedown', function(e) {
-                if (e.button === 0 && !e.target.classList.contains('map-cell')) {
+            // Build body
+            let html = '';
+
+            // Editable name + colour
+            html += `<div class="zi-field">
+                <div class="ci-label">Name &amp; Colour</div>
+                <div class="zi-form-row">
+                    <input type="text" class="zi-name-input" id="zi-name" value="${zone.name}" />
+                    <input type="color" class="zi-color-input" id="zi-colour" value="${zone.colour}" />
+                </div>
+            </div>`;
+
+            // Zone stats
+            let cellCount = 0;
+            const totals = entities.map(() => 0);
+            for (const row of mapData) {
+                for (const cell of row) {
+                    if (cell.zoneId === zoneId) {
+                        cellCount++;
+                        cell.populations.forEach((p, i) => { totals[i] += p; });
+                    }
+                }
+            }
+            const grandTotal = totals.reduce((s, v) => s + v, 0);
+
+            html += `<div class="zi-field">
+                <div class="ci-label">Cells</div>
+                <div class="ci-value">${cellCount}</div>
+            </div>`;
+
+            if (entities.length > 0) {
+                html += `<div class="zi-field">
+                    <div class="ci-label">Total Population</div>
+                    <div class="ci-value">${formatNumber(grandTotal)}</div>
+                </div>`;
+
+                html += `<div class="zi-field">
+                    <div class="ci-label">Breakdown</div>`;
+                entities.forEach((ent, i) => {
+                    const dimStyle = totals[i] === 0 ? ' opacity:0.35;' : '';
+                    html += `<div class="ci-pop-row" style="${dimStyle}">
+                        <div class="ci-pop-name"><span class="ci-pop-swatch" style="background:${getEntityColor(i)}"></span> ${ent.name}</div>
+                        <span style="font-size:11px;font-weight:600;">${formatNumber(totals[i])}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            // Merge into another zone
+            const otherZones = zones.filter(z => z.id !== zoneId);
+            if (otherZones.length > 0) {
+                html += `<div class="zi-field" style="margin-top:4px; padding-top:12px; border-top:1px solid var(--border);">
+                    <div class="ci-label">Merge Into</div>
+                    <div class="zi-form-row">
+                        <select id="zi-merge-target" class="zi-name-input">
+                            ${otherZones.map(z => `<option value="${z.id}">${z.name}</option>`).join('')}
+                        </select>
+                        <button id="zi-merge-btn" class="btn" style="white-space:nowrap;padding:3px 8px;font-size:10px;background:#c53030;color:white;border:none;">Merge</button>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Reassigns all ${cellCount} cell(s) and their populations to the target zone, then removes this zone.</div>
+                </div>`;
+            }
+
+            document.getElementById('zi-body').innerHTML = html;
+
+            // Wire up merge button
+            const mergeBtn = document.getElementById('zi-merge-btn');
+            if (mergeBtn) {
+                mergeBtn.addEventListener('click', () => {
+                    const targetId = parseInt(document.getElementById('zi-merge-target').value);
+                    const targetZone = getZone(targetId);
+                    if (!targetZone) return;
+                    if (!confirm(`Merge "${zone.name}" into "${targetZone.name}"?\n\nAll ${cellCount} cell(s) will be reassigned. This cannot be undone.`)) return;
+                    mergeZone(zoneId, targetId);
+                });
+            }
+
+            // Show in docked properties panel
+            panel.classList.add('show');
+            showPropertiesPanel();
+
+            // Wire up name/colour editing
+            document.getElementById('zi-name').addEventListener('input', e => {
+                zone.name = e.target.value.trim() || zone.name;
+                document.getElementById('zi-title').textContent = zone.name;
+                renderZoneList();
+            });
+            document.getElementById('zi-colour').addEventListener('input', e => {
+                zone.colour = e.target.value;
+                header.style.background = zone.colour;
+                const l = hexLuminance(zone.colour);
+                header.style.color = l > 0.5 ? '#1a202c' : 'white';
+                renderZoneList();
+                updateAllCells();
+            });
+        }
+
+        function closeZoneInspector() {
+            document.getElementById('zone-inspector').classList.remove('show');
+            const grid = document.getElementById('map-grid');
+            grid.classList.remove('zone-focus');
+            grid.querySelectorAll('.zone-highlighted').forEach(c => c.classList.remove('zone-highlighted'));
+            inspectedZoneId = null;
+            hidePropertiesPanel();
+        }
+
+        // ── Entity Inspector ──────────────────────────────────
+        let inspectedEntityIdx = null;
+
+        function openEntityInspector(entIdx, anchorEl) {
+            closeEntityInspector();
+            closeInspector();
+            closeZoneInspector();
+            const ent = entities[entIdx];
+            if (!ent) return;
+            inspectedEntityIdx = entIdx;
+
+            const color = getEntityColor(entIdx);
+            const panel = document.getElementById('entity-inspector');
+            const header = document.getElementById('ei-header');
+            header.style.background = color;
+            const lum = hexLuminance(color);
+            header.style.color = lum > 0.5 ? '#1a202c' : 'white';
+            document.getElementById('ei-title').textContent = ent.name;
+
+            // Highlight cells containing this entity
+            const grid = document.getElementById('map-grid');
+            grid.classList.add('entity-focus');
+            grid.querySelectorAll('.map-cell').forEach(cell => {
+                const cx = parseInt(cell.dataset.x);
+                const cy = parseInt(cell.dataset.y);
+                const d = mapData[cy][cx];
+                if (d.zoneId >= 0 && (d.populations[entIdx] || 0) > 0) {
+                    cell.classList.add('entity-highlighted');
+                } else {
+                    cell.classList.remove('entity-highlighted');
+                }
+            });
+
+            // Build body
+            let html = '';
+
+            // Colour picker
+            html += `<div class="zi-field">
+                <div class="ci-label">Colour</div>
+                <div class="zi-form-row">
+                    <input type="color" class="zi-color-input" id="ei-colour" value="${color}" />
+                </div>
+            </div>`;
+
+            // Stats
+            let cellCount = 0;
+            let totalPop = 0;
+            const perZone = {};
+            for (const row of mapData) {
+                for (const cell of row) {
+                    const pop = cell.populations[entIdx] || 0;
+                    if (pop > 0 && cell.zoneId >= 0) {
+                        cellCount++;
+                        totalPop += pop;
+                        perZone[cell.zoneId] = (perZone[cell.zoneId] || 0) + pop;
+                    }
+                }
+            }
+
+            html += `<div class="zi-field">
+                <div class="ci-label">Total Population</div>
+                <div class="ci-value">${formatNumber(totalPop)}</div>
+            </div>`;
+
+            html += `<div class="zi-field">
+                <div class="ci-label">Cells Occupied</div>
+                <div class="ci-value">${cellCount}</div>
+            </div>`;
+
+            // Breakdown by zone
+            const zoneIds = Object.keys(perZone).map(Number);
+            if (zoneIds.length > 0) {
+                html += `<div class="zi-field">
+                    <div class="ci-label">By Zone</div>`;
+                zoneIds.forEach(zid => {
+                    const z = getZone(zid);
+                    if (!z) return;
+                    html += `<div class="ci-pop-row">
+                        <div class="ci-pop-name"><span class="ci-pop-swatch" style="background:${z.colour}"></span> ${z.name}</div>
+                        <span style="font-size:11px;font-weight:600;">${formatNumber(perZone[zid])}</span>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+
+            document.getElementById('ei-body').innerHTML = html;
+
+            // Show in docked properties panel
+            panel.classList.add('show');
+            showPropertiesPanel();
+
+            // Wire colour editing
+            document.getElementById('ei-colour').addEventListener('input', e => {
+                entityColorOverrides[entIdx] = e.target.value;
+                header.style.background = e.target.value;
+                const l = hexLuminance(e.target.value);
+                header.style.color = l > 0.5 ? '#1a202c' : 'white';
+                renderEntityList();
+                updateAllCells();
+            });
+
+        }
+
+        function closeEntityInspector() {
+            document.getElementById('entity-inspector').classList.remove('show');
+            const grid = document.getElementById('map-grid');
+            grid.classList.remove('entity-focus');
+            grid.querySelectorAll('.entity-highlighted').forEach(c => c.classList.remove('entity-highlighted'));
+            inspectedEntityIdx = null;
+            hidePropertiesPanel();
+        }
+
+        function hexLuminance(hex) {
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            return 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+
+        // ── Pan / Zoom ─────────────────────────────────────────
+        function updateMapTransform() {
+            document.getElementById('map-container').style.transform =
+                `translate(${panX}px, ${panY}px) scale(${zoom})`;
+        }
+
+        // ── Resize Handles ───────────────────────────────────────
+        const CELL_STEP = 41; // 40px cell + 1px gap
+        const HANDLE_SIZE = 16;
+        let resizeDrag = null;
+
+        function positionResizeHandles() {
+            if (!mapData.length || !mapData[0].length) return;
+            const cols = mapData[0].length;
+            const rows = mapData.length;
+            const gridW = cols * CELL_STEP - 1;
+            const gridH = rows * CELL_STEP - 1;
+
+            const top = document.querySelector('.resize-top');
+            const bottom = document.querySelector('.resize-bottom');
+            const left = document.querySelector('.resize-left');
+            const right = document.querySelector('.resize-right');
+
+            top.style.left = '0';
+            top.style.top = -HANDLE_SIZE + 'px';
+            top.style.width = gridW + 'px';
+
+            bottom.style.left = '0';
+            bottom.style.top = (gridH + HANDLE_SIZE - 10) + 'px';
+            bottom.style.width = gridW + 'px';
+
+            left.style.left = -HANDLE_SIZE + 'px';
+            left.style.top = '0';
+            left.style.height = gridH + 'px';
+
+            right.style.left = (gridW + HANDLE_SIZE - 10) + 'px';
+            right.style.top = '0';
+            right.style.height = gridH + 'px';
+        }
+
+        function getOccupiedBounds() {
+            let minX = Infinity, maxX = -1, minY = Infinity, maxY = -1;
+            for (let y = 0; y < mapData.length; y++) {
+                for (let x = 0; x < mapData[y].length; x++) {
+                    if (mapData[y][x].zoneId >= 0) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+            return { minX, maxX, minY, maxY };
+        }
+
+        function showResizePreview(edge, delta) {
+            const preview = document.getElementById('resize-preview');
+            if (delta === 0) { preview.style.display = 'none'; return; }
+
+            const cols = mapData[0].length;
+            const rows = mapData.length;
+            const gridW = cols * CELL_STEP - 1;
+            const gridH = rows * CELL_STEP - 1;
+            const growing = delta > 0;
+            const size = Math.abs(delta) * CELL_STEP;
+            let l, t, w, h;
+
+            switch (edge) {
+                case 'right':
+                    l = growing ? gridW : gridW - size;
+                    t = 0; w = size; h = gridH; break;
+                case 'left':
+                    l = growing ? -size : 0;
+                    t = 0; w = size; h = gridH; break;
+                case 'bottom':
+                    t = growing ? gridH : gridH - size;
+                    l = 0; w = gridW; h = size; break;
+                case 'top':
+                    t = growing ? -size : 0;
+                    l = 0; w = gridW; h = size; break;
+            }
+
+            preview.style.display = 'block';
+            preview.style.left = l + 'px';
+            preview.style.top = t + 'px';
+            preview.style.width = w + 'px';
+            preview.style.height = h + 'px';
+            preview.style.background = growing ? 'rgba(72, 187, 120, 0.15)' : 'rgba(245, 101, 101, 0.15)';
+            preview.style.border = `2px dashed ${growing ? '#48bb78' : '#f56565'}`;
+        }
+
+        function clampResizeDelta(edge, delta) {
+            if (delta >= 0) return delta;
+            const cols = mapData[0].length;
+            const rows = mapData.length;
+            const bounds = getOccupiedBounds();
+            const hasOccupied = bounds.maxX >= 0;
+            let maxRemovable;
+            switch (edge) {
+                case 'right':
+                    maxRemovable = hasOccupied ? cols - bounds.maxX - 1 : cols - 1; break;
+                case 'left':
+                    maxRemovable = hasOccupied ? bounds.minX : cols - 1; break;
+                case 'bottom':
+                    maxRemovable = hasOccupied ? rows - bounds.maxY - 1 : rows - 1; break;
+                case 'top':
+                    maxRemovable = hasOccupied ? bounds.minY : rows - 1; break;
+            }
+            return Math.max(delta, -maxRemovable);
+        }
+
+        function applyResize(edge, rawDelta) {
+            const delta = clampResizeDelta(edge, rawDelta);
+            if (delta === 0) return;
+            const rows = mapData.length;
+            const cols = mapData[0].length;
+            const emptyCell = () => ({ zoneId: -1, populations: entities.map(() => 0) });
+            const isVert = edge === 'top' || edge === 'bottom';
+
+            if (delta > 0) {
+                if (isVert) {
+                    const newRows = Array.from({ length: delta }, () =>
+                        Array.from({ length: cols }, () => emptyCell()));
+                    if (edge === 'top') mapData.unshift(...newRows);
+                    else mapData.push(...newRows);
+                } else {
+                    for (let y = 0; y < rows; y++) {
+                        const nc = Array.from({ length: delta }, () => emptyCell());
+                        if (edge === 'left') mapData[y] = nc.concat(mapData[y]);
+                        else mapData[y] = mapData[y].concat(nc);
+                    }
+                }
+            } else {
+                const remove = -delta;
+                if (isVert) {
+                    if (edge === 'top') mapData.splice(0, remove);
+                    else mapData.length = rows - remove;
+                } else {
+                    for (let y = 0; y < rows; y++) {
+                        if (edge === 'left') mapData[y].splice(0, remove);
+                        else mapData[y].length = cols - remove;
+                    }
+                }
+            }
+
+            // Adjust pan to keep content visually stable for left/top
+            if (edge === 'left') panX -= delta * CELL_STEP * zoom;
+            if (edge === 'top') panY -= delta * CELL_STEP * zoom;
+
+            document.getElementById('map-width').value = mapData[0].length;
+            document.getElementById('map-height').value = mapData.length;
+            createMapVisual();
+        }
+
+        function onResizeMouseDown(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resizeDrag = {
+                edge: e.currentTarget.dataset.edge,
+                startX: e.clientX,
+                startY: e.clientY
+            };
+            document.addEventListener('mousemove', onResizeMouseMove);
+            document.addEventListener('mouseup', onResizeMouseUp);
+        }
+
+        function onResizeMouseMove(e) {
+            if (!resizeDrag) return;
+            const { edge, startX, startY } = resizeDrag;
+            const dx = (e.clientX - startX) / zoom;
+            const dy = (e.clientY - startY) / zoom;
+            let delta;
+            switch (edge) {
+                case 'right':  delta = Math.round(dx / CELL_STEP); break;
+                case 'bottom': delta = Math.round(dy / CELL_STEP); break;
+                case 'left':   delta = -Math.round(dx / CELL_STEP); break;
+                case 'top':    delta = -Math.round(dy / CELL_STEP); break;
+            }
+            showResizePreview(edge, clampResizeDelta(edge, delta));
+        }
+
+        function onResizeMouseUp(e) {
+            if (!resizeDrag) return;
+            const { edge, startX, startY } = resizeDrag;
+            const dx = (e.clientX - startX) / zoom;
+            const dy = (e.clientY - startY) / zoom;
+            let delta;
+            switch (edge) {
+                case 'right':  delta = Math.round(dx / CELL_STEP); break;
+                case 'bottom': delta = Math.round(dy / CELL_STEP); break;
+                case 'left':   delta = -Math.round(dx / CELL_STEP); break;
+                case 'top':    delta = -Math.round(dy / CELL_STEP); break;
+            }
+            document.getElementById('resize-preview').style.display = 'none';
+            resizeDrag = null;
+            document.removeEventListener('mousemove', onResizeMouseMove);
+            document.removeEventListener('mouseup', onResizeMouseUp);
+            if (delta !== 0) applyResize(edge, delta);
+        }
+
+        function initResizeHandles() {
+            document.querySelectorAll('.resize-handle').forEach(h =>
+                h.addEventListener('mousedown', onResizeMouseDown));
+        }
+
+        // focalX/focalY: point in viewport coords that should stay fixed.
+        // If omitted, zooms around the centre of the map content.
+        function setZoom(z, focalX, focalY) {
+            const newZoom = Math.max(0.3, Math.min(3, z));
+            if (newZoom === zoom) return;
+
+            if (focalX === undefined) {
+                // Centre of viewport → derive the world point under it
+                const vp = document.getElementById('map-viewport');
+                focalX = vp.clientWidth / 2;
+                focalY = vp.clientHeight / 2;
+            }
+
+            // World point under the focal pixel before zoom
+            const wx = (focalX - panX) / zoom;
+            const wy = (focalY - panY) / zoom;
+
+            zoom = newZoom;
+
+            // Adjust pan so the same world point stays under the focal pixel
+            panX = focalX - wx * zoom;
+            panY = focalY - wy * zoom;
+
+            updateMapTransform();
+            document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
+        }
+
+        // Available viewport area (now the viewport itself is already between panels)
+        function getUsableViewport() {
+            const vp = document.getElementById('map-viewport');
+            return {
+                x: 0,
+                width: vp.clientWidth,
+                height: vp.clientHeight
+            };
+        }
+
+        function resetView() {
+            const w = mapData.length > 0 ? mapData[0].length : 0;
+            const h = mapData.length;
+            const mapW = w * 41 + 22;
+            const mapH = h * 41 + 22;
+            const area = getUsableViewport();
+            panX = area.x + Math.max(20, (area.width - mapW) / 2);
+            panY = Math.max(20, (area.height - mapH) / 2);
+            zoom = 1;
+            updateMapTransform();
+            document.getElementById('zoom-level').textContent = '100%';
+        }
+
+        function fillView() {
+            const w = mapData.length > 0 ? mapData[0].length : 0;
+            const h = mapData.length;
+            if (w === 0 || h === 0) return;
+            const mapW = w * 41 + 22;
+            const mapH = h * 41 + 22;
+            const area = getUsableViewport();
+            const pad = 40; // padding around edges
+            const scaleX = (area.width - pad) / mapW;
+            const scaleY = (area.height - pad) / mapH;
+            zoom = Math.max(0.3, Math.min(3, Math.min(scaleX, scaleY)));
+            panX = area.x + (area.width - mapW * zoom) / 2;
+            panY = (area.height - mapH * zoom) / 2;
+            updateMapTransform();
+            document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
+        }
+
+        // ── Matrix Loading ─────────────────────────────────────
+        function loadMatricesFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    parseMatrices(ev.target.result);
+                    showMatricesPreview();
+                    updateWelcomeState();
+                } catch (err) {
+                    showStatus('w-matrices-status', 'Error: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showMatricesPreview() {
+            const box = document.getElementById('wfi-matrices');
+            box.classList.add('loaded', 'has-preview');
+            box.innerHTML = `<div class="matrices-preview">
+                <div class="matrices-preview-header">
+                    <span>${entities.length} entities</span>
+                    <button class="matrices-preview-clear" id="btn-clear-matrices">Clear</button>
+                </div>
+                <div class="matrices-preview-list">
+                    ${entities.map((ent, i) => `<div class="matrices-preview-item">
+                        <span class="mp-idx">${i + 1}</span>
+                        <span class="mp-dot" style="background:${getEntityColor(i)}"></span>
+                        ${ent.name}
+                    </div>`).join('')}
+                </div>
+            </div>`;
+            document.getElementById('btn-clear-matrices').addEventListener('click', clearMatrices);
+        }
+
+        function clearMatrices() {
+            entities = [];
+            entityPopulationValues = {};
+            // Reset the drop zone back to its original state
+            const box = document.getElementById('wfi-matrices');
+            box.classList.remove('loaded', 'has-preview');
+            box.innerHTML = `<input type="file" id="w-matrices-file" accept=".csv" />
+                <p>Add Matrices CSV</p>
+                <small>Defines the entities and their interactions</small>`;
+            // Re-wire the file input
+            document.getElementById('w-matrices-file').addEventListener('change', loadMatricesFromFile);
+            updateWelcomeState();
+        }
+
+        function parseMatrices(csv) {
+            const lines = csv.trim().split('\n');
+            if (!lines.length) throw new Error('Empty file');
+            const header = lines[0].split(',').map(s => s.trim());
+            entities = header.map((name, index) => ({ name, index }));
+            entities.forEach((_, i) => {
+                if (!(i in entityPopulationValues)) entityPopulationValues[i] = 1;
+            });
+            // Extend existing map populations
+            for (const row of mapData) {
+                for (const cell of row) {
+                    cell.populations = entities.map((_, i) => cell.populations[i] || 0);
+                }
+            }
+            updateAllCells();
+            renderEntityList();
+        }
+
+        function updateWelcomeState() {
+            const step2 = document.getElementById('welcome-step2');
+            step2.classList.toggle('disabled', entities.length === 0);
+        }
+
+        // ── Map Import ─────────────────────────────────────────
+        function loadMapFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    parseMapCSV(ev.target.result);
+                    const name = file.name.replace(/\.csv$/i, '');
+                    document.getElementById('map-name').value = name;
+                    showStatus('w-map-status', 'Map loaded!', 'success');
+                    enterEditor();
+                } catch (err) {
+                    showStatus('w-map-status', 'Error: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function enterEditor() {
+            document.getElementById('welcome-overlay').classList.add('hidden');
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('map-viewport').classList.remove('hidden');
+            document.getElementById('properties-panel').classList.remove('hidden');
+            renderZoneList();
+            renderEntityList();
+            createMapVisual();
+            switchToolMode('select');
+            setTimeout(resetView, 50);
+        }
+
+        function showWelcomeScreen() {
+            // Reset state
+            zones = [];
+            entities = [];
+            mapData = [];
+            selectedZoneId = null;
+            selectedEntity = null;
+            entityPopulationValues = {};
+            undoStack.length = 0;
+            document.getElementById('map-width').value = 10;
+            document.getElementById('map-height').value = 10;
+
+            // Hide editor, show welcome
+            document.getElementById('sidebar').classList.add('hidden');
+            document.getElementById('map-viewport').classList.add('hidden');
+            document.getElementById('properties-panel').classList.add('hidden');
+            document.getElementById('properties-panel').classList.remove('show');
+            document.getElementById('welcome-overlay').classList.remove('hidden');
+            document.getElementById('map-grid').innerHTML = '';
+            closeInspector();
+            closeZoneInspector();
+            closeEntityInspector();
+
+            // Reset welcome screen UI — rebuild matrices drop zone from scratch
+            const box = document.getElementById('wfi-matrices');
+            box.classList.remove('loaded', 'has-preview');
+            box.innerHTML = `<input type="file" id="w-matrices-file" accept=".csv" />
+                <p>Add Matrices CSV</p>
+                <small>Defines the entities and their interactions</small>`;
+            document.getElementById('w-matrices-file').addEventListener('change', loadMatricesFromFile);
+            document.getElementById('w-map-file').value = '';
+            const wMapStatus = document.getElementById('w-map-status');
+            if (wMapStatus) wMapStatus.className = 'welcome-status';
+            const wMatStatus = document.getElementById('w-matrices-status');
+            if (wMatStatus) wMatStatus.className = 'welcome-status';
+            document.getElementById('welcome-step2').classList.add('disabled');
+        }
+
+        function parseMapCSV(csv) {
+            const rawLines = csv.trim().split('\n');
+            if (!rawLines.length) throw new Error('Empty file');
+
+            let gridLines = [];
+            let parsedZones = false;
+
+            for (const line of rawLines) {
+                if (line.startsWith('#zones:')) {
+                    // Parse zone definitions: #zones:0=land:#48bb78,1=water:#4299e1,...
+                    const payload = line.substring('#zones:'.length);
+                    zones = [];
+                    for (const part of payload.split(',')) {
+                        const m = part.match(/^(\d+)=([^:]+):(.+)$/);
+                        if (m) {
+                            zones.push({ id: parseInt(m[1]), name: m[2], colour: m[3] });
+                        }
+                    }
+                    parsedZones = true;
+                    renderZoneList();
+                } else if (line.startsWith('#name:')) {
+                    document.getElementById('map-name').value = line.substring('#name:'.length).trim();
+                } else if (line.startsWith('#bg:')) {
+                    setMapBg(line.substring('#bg:'.length).trim());
+                } else if (line.startsWith('#entities:')) {
+                    // Informational — matrix CSV is authoritative
+                } else if (line.startsWith('#')) {
+                    // Skip other comment lines
+                } else {
+                    gridLines.push(line);
+                }
+            }
+
+            // Backwards compat: no #zones line → create default "Land" zone
+            if (!parsedZones) {
+                zones = [{ id: 0, name: 'Land', colour: '#48bb78' }];
+                renderZoneList();
+            }
+
+            // Parse grid rows
+            const rowData = [];
+            let maxW = 0;
+            for (const line of gridLines) {
+                const cells = [];
+                let cur = '', inBracket = false;
+                for (const ch of line) {
+                    if (ch === '[') { inBracket = true; cur += ch; }
+                    else if (ch === ']') { inBracket = false; cur += ch; }
+                    else if (ch === ',' && !inBracket) { cells.push(cur.trim()); cur = ''; }
+                    else cur += ch;
+                }
+                if (cur.trim()) cells.push(cur.trim());
+                rowData.push(cells);
+                maxW = Math.max(maxW, cells.length);
+            }
+
+            const newH = rowData.length;
+            const newW = maxW;
+
+            document.getElementById('map-width').value = newW;
+            document.getElementById('map-height').value = newH;
+
+            mapData = Array.from({ length: newH }, () =>
+                Array.from({ length: newW }, () => ({
+                    zoneId: -1,
+                    populations: entities.map(() => 0)
+                }))
+            );
+
+            for (let y = 0; y < newH; y++) {
+                const cells = rowData[y] || [];
+                for (let x = 0; x < newW; x++) {
+                    const raw = x < cells.length ? cells[x] : '-1';
+                    if (raw === '-1' || raw === '') {
+                        mapData[y][x].zoneId = -1;
+                    } else {
+                        const m = raw.match(/^(\d+)\[(.*)\]$/);
+                        if (m) {
+                            mapData[y][x].zoneId = parseInt(m[1]);
+                            if (m[2].length > 0) {
+                                const pops = m[2].split(',').map(p => parseInt(p.trim()) || 0);
+                                mapData[y][x].populations = entities.map((_, i) => pops[i] || 0);
+                            }
+                            // else: empty brackets like "0[]" — populations stay zeroed
+                        } else {
+                            const tid = parseInt(raw);
+                            if (!isNaN(tid) && tid >= 0) {
+                                mapData[y][x].zoneId = tid;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Pre-select first zone as brush (without switching tool mode)
+            if (zones.length > 0) {
+                selectedZoneId = zones[0].id;
+                useEraser = false;
+                renderZoneList();
+            }
+
+            createMapVisual();
+            setTimeout(resetView, 50);
+            renderEntityList();
+        }
+
+        // ── Export ──────────────────────────────────────────────
+        function generateCSV() {
+            if (!mapData.length) return '';
+            const lines = [];
+
+            // #name header
+            const mapName = (document.getElementById('map-name').value || 'Map').trim();
+            lines.push('#name:' + mapName);
+
+            // #bg header
+            lines.push('#bg:' + mapBgColour);
+
+            // #zones header
+            if (zones.length > 0) {
+                lines.push('#zones:' + zones.map(z => `${z.id}=${z.name}:${z.colour}`).join(','));
+            }
+
+            // #entities header
+            if (entities.length > 0) {
+                lines.push('#entities:' + entities.map(e => e.name).join(','));
+            }
+
+            // Grid rows
+            for (const row of mapData) {
+                const cells = row.map(d => {
+                    if (d.zoneId < 0) return '-1';
+                    return `${d.zoneId}[${d.populations.join(',')}]`;
+                });
+                lines.push(cells.join(','));
+            }
+            return lines.join('\n');
+        }
+
+        function exportMap() {
+            const csv = generateCSV();
+            if (!csv) { alert('No map data to export'); return; }
+
+            // Build filename: sanitised name + timestamp
+            const raw = (document.getElementById('map-name').value || 'Map').trim() || 'Map';
+            const safeName = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
+            const now = new Date();
+            const ts = now.getFullYear().toString()
+                + String(now.getMonth() + 1).padStart(2, '0')
+                + String(now.getDate()).padStart(2, '0')
+                + '_'
+                + String(now.getHours()).padStart(2, '0')
+                + String(now.getMinutes()).padStart(2, '0')
+                + String(now.getSeconds()).padStart(2, '0');
+            const filename = `${safeName}_${ts}.csv`;
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        // ── Clear Map ──────────────────────────────────────────
+        function clearMap() {
+            if (!confirm('Return to the load screen? All unsaved changes will be lost.')) return;
+            showWelcomeScreen();
+        }
+
+        // ── Shortcuts Panel ────────────────────────────────────
+        function toggleShortcutsPanel() {
+            document.getElementById('shortcuts-panel').classList.toggle('show');
+        }
+        function closeShortcutsPanel() {
+            document.getElementById('shortcuts-panel').classList.remove('show');
+        }
+
+        // ── Init ───────────────────────────────────────────────
+        function init() {
+            // Welcome screen file inputs
+            document.getElementById('wfi-matrices').addEventListener('click', e => {
+                if (e.target.closest('.matrices-preview')) return; // preview is showing
+                const fi = document.getElementById('w-matrices-file');
+                if (fi && e.target.tagName !== 'INPUT') fi.click();
+            });
+            document.getElementById('w-matrices-file').addEventListener('change', loadMatricesFromFile);
+            document.getElementById('wfi-map').addEventListener('click', e => {
+                if (e.target.tagName !== 'INPUT') document.getElementById('w-map-file').click();
+            });
+            document.getElementById('w-map-file').addEventListener('change', loadMapFromFile);
+            document.getElementById('wfi-new-map').addEventListener('click', () => {
+                createMap();
+                enterEditor();
+            });
+
+            // Map controls
+            document.getElementById('btn-resize').addEventListener('click', createMap);
+            document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(zoom + 0.2));
+            document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(zoom - 0.2));
+            document.getElementById('btn-reset-view').addEventListener('click', resetView);
+            document.getElementById('btn-fill-view').addEventListener('click', fillView);
+            document.getElementById('btn-clear').addEventListener('click', clearMap);
+            document.getElementById('map-bg-color').addEventListener('input', e => setMapBg(e.target.value));
+
+            // Zone add form
+            document.getElementById('btn-add-zone').addEventListener('click', () => {
+                const form = document.getElementById('zone-add-form');
+                form.classList.toggle('show');
+                if (form.classList.contains('show')) {
+                    document.getElementById('new-zone-name').focus();
+                }
+            });
+            document.getElementById('btn-confirm-zone').addEventListener('click', () => {
+                const name = document.getElementById('new-zone-name').value.trim();
+                const colour = document.getElementById('new-zone-color').value;
+                if (!name) return;
+                addZone(name, colour);
+                document.getElementById('new-zone-name').value = '';
+                document.getElementById('zone-add-form').classList.remove('show');
+            });
+            document.getElementById('btn-cancel-zone').addEventListener('click', () => {
+                document.getElementById('zone-add-form').classList.remove('show');
+            });
+            // Submit zone on Enter
+            document.getElementById('new-zone-name').addEventListener('keydown', e => {
+                if (e.key === 'Enter') document.getElementById('btn-confirm-zone').click();
+            });
+
+            // Eraser
+            document.getElementById('eraser-tool').addEventListener('click', e => {
+                if (e.target.tagName !== 'INPUT') selectEraser();
+            });
+
+            // Tool mode buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchToolMode(btn.dataset.mode));
+            });
+
+            // Population controls
+            const popInput = document.getElementById('population-value');
+            const syncPop = () => {
+                populationValue = parseInt(popInput.value) || 0;
+                if (selectedEntity !== null) entityPopulationValues[selectedEntity] = populationValue;
+            };
+            popInput.addEventListener('input', syncPop);
+            popInput.addEventListener('change', syncPop);
+            document.getElementById('btn-pop-minus').addEventListener('click', () => {
+                popInput.value = Math.max(0, (parseInt(popInput.value) || 0) - 1);
+                syncPop();
+            });
+            document.getElementById('btn-pop-plus').addEventListener('click', () => {
+                popInput.value = Math.min(999999999, (parseInt(popInput.value) || 0) + 1);
+                syncPop();
+            });
+
+            // Export
+            document.getElementById('btn-export').addEventListener('click', exportMap);
+
+            // Cursor tooltip
+            const viewport = document.getElementById('map-viewport');
+            viewport.addEventListener('mousemove', updateCursorTooltip);
+            viewport.addEventListener('mouseleave', hideCursorTooltip);
+
+            // Pan/zoom
+            viewport.addEventListener('wheel', e => {
+                e.preventDefault();
+                const rect = viewport.getBoundingClientRect();
+                const fx = e.clientX - rect.left;
+                const fy = e.clientY - rect.top;
+                setZoom(zoom + (e.deltaY > 0 ? -0.1 : 0.1), fx, fy);
+            }, { passive: false });
+
+            viewport.addEventListener('mousedown', e => {
+                // Middle mouse, space+left-click, or pan tool: pan from anywhere
+                if (e.button === 1 || (e.button === 0 && (spaceHeld || toolMode === 'pan'))) {
+                    isPanning = true;
+                    lastPanX = e.clientX;
+                    lastPanY = e.clientY;
+                    viewport.classList.add('dragging');
+                    e.preventDefault();
+                    return;
+                }
+                // Normal left-click on empty viewport area: pan
+                if (e.button === 0 && !e.target.closest('.map-cell') && !e.target.closest('.resize-handle')) {
                     isPanning = true;
                     lastPanX = e.clientX;
                     lastPanY = e.clientY;
@@ -715,621 +2929,133 @@
                 }
             });
 
-            document.addEventListener('mousemove', function(e) {
+            document.addEventListener('mousemove', e => {
                 if (isPanning) {
-                    const deltaX = e.clientX - lastPanX;
-                    const deltaY = e.clientY - lastPanY;
-                    
-                    panX += deltaX;
-                    panY += deltaY;
-                    
+                    panX += e.clientX - lastPanX;
+                    panY += e.clientY - lastPanY;
                     lastPanX = e.clientX;
                     lastPanY = e.clientY;
-                    
                     updateMapTransform();
                 }
             });
 
-            document.addEventListener('mouseup', function() {
-                if (isPanning) {
-                    isPanning = false;
-                    viewport.classList.remove('dragging');
+            document.addEventListener('mouseup', () => {
+                isPanning = false;
+                if (isDrawing) {
+                    isDrawing = false;
+                    finishStroke();
                 }
+                document.getElementById('map-viewport').classList.remove('dragging');
             });
-        }
 
-        function updateMapTransform() {
-            const container = document.getElementById('map-container');
-            container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-        }
+            // Cell inspector close
+            document.getElementById('ci-close').addEventListener('click', closeInspector);
+            document.getElementById('zi-close').addEventListener('click', closeZoneInspector);
+            document.getElementById('ei-close').addEventListener('click', closeEntityInspector);
+            document.getElementById('sp-close').addEventListener('click', closeShortcutsPanel);
+            document.getElementById('btn-shortcuts').addEventListener('click', () => {
+                toggleShortcutsPanel();
+                document.getElementById('btn-shortcuts').blur();
+            });
+            setupInspectorDrag();
 
-        function setZoom(newZoom) {
-            zoom = Math.max(0.5, Math.min(2, newZoom));
-            updateMapTransform();
-            updateZoomDisplay();
-        }
-
-        function updateZoomDisplay() {
-            document.getElementById('zoom-level').textContent = Math.round(zoom * 100) + '%';
-        }
-
-        function zoomIn() {
-            setZoom(zoom + 0.2);
-        }
-
-        function zoomOut() {
-            setZoom(zoom - 0.2);
-        }
-
-        function resetView() {
-            const viewport = document.getElementById('map-viewport');
-            const mapGrid = document.getElementById('map-grid');
-            
-            // Get viewport dimensions
-            const viewportWidth = viewport.clientWidth;
-            const viewportHeight = viewport.clientHeight;
-            
-            // Estimate map size (40px per cell + padding and borders)
-            const mapWidth = mapData.length > 0 ? mapData[0].length * 41 + 20 : 200;
-            const mapHeight = mapData.length > 0 ? mapData.length * 41 + 20 : 200;
-            
-            // Center the map in the viewport
-            panX = Math.max(20, (viewportWidth - mapWidth) / 2);
-            panY = Math.max(20, (viewportHeight - mapHeight) / 2);
-            zoom = 1;
-            
-            updateMapTransform();
-            updateZoomDisplay();
-        }
-
-        function loadMatrices(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const csv = e.target.result;
-                    parseMatrices(csv);
-                    showStatus('matrices-status', 'Matrices loaded successfully!', 'success');
-                } catch (error) {
-                    showStatus('matrices-status', 'Error loading matrices: ' + error.message, 'error');
+            // Keyboard shortcuts
+            document.addEventListener('keydown', e => {
+                // Ctrl/Cmd+Z for undo (works even in inputs)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); return; }
+                // Space for pan mode (hold) — skip when typing in inputs
+                if (e.key === ' ' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                    e.preventDefault();
+                    spaceHeld = true;
+                    preSpaceToolMode = toolMode;
+                    switchToolMode('pan');
+                    return;
                 }
-            };
-            reader.readAsText(file);
-        }
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                if (e.key === '?') { toggleShortcutsPanel(); return; }
+                if (e.key === 'Escape') { closeShortcutsPanel(); closeInspector(); closeZoneInspector(); closeEntityInspector(); switchToolMode('select'); return; }
+                if (e.key === 'r' || e.key === 'R') { resetView(); return; }
+                if (e.key === 'f' || e.key === 'F') { fillView(); return; }
 
-        function loadMap(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+                // Mode switching
+                if (e.key === 'z' && !e.ctrlKey && !e.metaKey) { switchToolMode('zone'); return; }
+                if (e.key === 'e') { switchToolMode('population'); return; }
+                if (e.key === 's' && !e.ctrlKey && !e.metaKey) { switchToolMode('select'); return; }
 
-            console.log('Loading file:', file.name, 'Size:', file.size, 'bytes');
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const csv = e.target.result;
-                    console.log('Raw CSV content length:', csv.length);
-                    console.log('First 200 characters:', csv.substring(0, 200));
-                    
-                    if (!csv || csv.trim().length === 0) {
-                        throw new Error('CSV file is empty or contains no readable data');
+                // Mode-specific number keys and +/- controls
+                if (toolMode === 'zone') {
+                    // 0-9: select zones (0 = eraser)
+                    if (e.key === '0') { selectEraser(); refreshCursorTooltip(); return; }
+                    if (e.key >= '1' && e.key <= '9') {
+                        const idx = parseInt(e.key) - 1;
+                        if (idx < zones.length) selectZone(zones[idx].id);
+                        refreshCursorTooltip();
+                        return;
                     }
-                    
-                    parseMapData(csv);
-                    showStatus('map-status', 'Map loaded successfully!', 'success');
-                } catch (error) {
-                    console.error('Error loading map:', error);
-                    showStatus('map-status', 'Error loading map: ' + error.message, 'error');
-                }
-            };
-            
-            reader.onerror = function() {
-                console.error('File reading error');
-                showStatus('map-status', 'Error reading file', 'error');
-            };
-            
-            reader.readAsText(file);
-        }
-
-        function parseMatrices(csv) {
-            const lines = csv.trim().split('\n');
-            if (lines.length < 1) throw new Error('Empty CSV file');
-
-            // Parse header to get entity names
-            const header = lines[0].split(',').map(col => col.trim());
-            
-            entities = header.map((name, index) => ({
-                name: name,
-                index: index,
-                population: 0
-            }));
-
-            // Initialize population values for new entities
-            entities.forEach((entity, index) => {
-                if (!(index in entityPopulationValues)) {
-                    entityPopulationValues[index] = 1;
+                } else if (toolMode === 'population') {
+                    // 1-9: select entity by index
+                    if (e.key >= '1' && e.key <= '9') {
+                        const idx = parseInt(e.key) - 1;
+                        if (idx < entities.length) selectEntityByIndex(idx);
+                        refreshCursorTooltip();
+                        return;
+                    }
+                    // = to increase by 1, + (shift+=) to increase by 10
+                    // - to decrease by 1, _ (shift+-) to decrease by 10
+                    if (e.key === '=' || e.key === '+') {
+                        const step = e.key === '+' ? 10 : 1;
+                        populationValue = Math.min(999999999, populationValue + step);
+                        if (selectedEntity !== null) entityPopulationValues[selectedEntity] = populationValue;
+                        document.getElementById('population-value').value = populationValue;
+                        refreshCursorTooltip();
+                        return;
+                    }
+                    if (e.key === '-' || e.key === '_') {
+                        const step = e.key === '_' ? 10 : 1;
+                        populationValue = Math.max(0, populationValue - step);
+                        if (selectedEntity !== null) entityPopulationValues[selectedEntity] = populationValue;
+                        document.getElementById('population-value').value = populationValue;
+                        refreshCursorTooltip();
+                        return;
+                    }
+                    // [ to decrease by 10, ] to increase by 10
+                    if (e.key === ']') {
+                        populationValue = Math.min(999999999, populationValue + 10);
+                        if (selectedEntity !== null) entityPopulationValues[selectedEntity] = populationValue;
+                        document.getElementById('population-value').value = populationValue;
+                        refreshCursorTooltip();
+                        return;
+                    }
+                    if (e.key === '[') {
+                        populationValue = Math.max(0, populationValue - 10);
+                        if (selectedEntity !== null) entityPopulationValues[selectedEntity] = populationValue;
+                        document.getElementById('population-value').value = populationValue;
+                        refreshCursorTooltip();
+                        return;
+                    }
                 }
             });
 
-            // Update populations array for existing map data
-            if (mapData.length > 0) {
-                for (let y = 0; y < mapData.length; y++) {
-                    for (let x = 0; x < mapData[y].length; x++) {
-                        // Extend or truncate populations array to match new entities
-                        const currentPops = mapData[y][x].populations;
-                        mapData[y][x].populations = entities.map((_, index) => currentPops[index] || 0);
+            document.addEventListener('keyup', e => {
+                if (e.key === ' ') {
+                    spaceHeld = false;
+                    if (preSpaceToolMode !== null) {
+                        switchToolMode(preSpaceToolMode);
+                        preSpaceToolMode = null;
                     }
                 }
-                updateAllCellDisplays();
-            }
-
-            updateEntityList();
-            updateMapLoadingState(); // Enable map loading now that matrices is loaded
-        }
-
-        function updateMapLoadingState() {
-            const mapSection = document.getElementById('load-map-section');
-            
-            if (entities.length === 0) {
-                // Disable map loading
-                mapSection.classList.add('disabled');
-            } else {
-                // Enable map loading
-                mapSection.classList.remove('disabled');
-            }
-        }
-
-        function parseMapData(csv) {
-            const lines = csv.trim().split('\n');
-            if (lines.length === 0) throw new Error('Empty CSV file');
-
-            console.log('Parsing map data:', lines.length, 'lines');
-
-            // First pass: parse all rows without splitting on commas inside brackets
-            const rowData = [];
-            let maxWidth = 0;
-            
-            for (let y = 0; y < lines.length; y++) {
-                const line = lines[y];
-                const cells = [];
-                let currentCell = '';
-                let insideBrackets = false;
-                
-                // Parse character by character to handle brackets correctly
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    
-                    if (char === '[') {
-                        insideBrackets = true;
-                        currentCell += char;
-                    } else if (char === ']') {
-                        insideBrackets = false;
-                        currentCell += char;
-                    } else if (char === ',' && !insideBrackets) {
-                        // This comma separates cells, not populations
-                        cells.push(currentCell.trim());
-                        currentCell = '';
-                    } else {
-                        currentCell += char;
-                    }
-                }
-                
-                // Don't forget the last cell
-                if (currentCell.trim()) {
-                    cells.push(currentCell.trim());
-                }
-                
-                rowData.push(cells);
-                maxWidth = Math.max(maxWidth, cells.length);
-                console.log(`Row ${y}:`, cells.length, 'cells', cells.slice(0, 3).join(' | '));
-            }
-
-            const newHeight = lines.length;
-            const newWidth = maxWidth;
-
-            console.log('Map dimensions:', newWidth, 'x', newHeight);
-
-            // Update size inputs
-            document.getElementById('map-width').value = newWidth;
-            document.getElementById('map-height').value = newHeight;
-
-            // Initialize map data with consistent dimensions
-            mapData = Array(newHeight).fill().map(() => 
-                Array(newWidth).fill().map(() => ({
-                    tileType: -1,
-                    populations: entities.length > 0 ? entities.map(() => 0) : []
-                }))
-            );
-
-            // Parse each cell with consistent grid handling
-            for (let y = 0; y < newHeight; y++) {
-                const cells = rowData[y] || [];
-                
-                for (let x = 0; x < newWidth; x++) {
-                    const cell = x < cells.length ? cells[x] : '-1';
-                    
-                    if (cell === '-1' || cell === '') {
-                        mapData[y][x].tileType = -1;
-                        mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
-                    } else {
-                        // Parse format like "0[34,2,0]"
-                        const match = cell.match(/^(\d+)\[(.+)\]$/);
-                        if (match) {
-                            mapData[y][x].tileType = parseInt(match[1]);
-                            const populations = match[2].split(',').map(p => parseInt(p.trim()) || 0);
-                            
-                            // Ensure populations array matches entities length
-                            if (entities.length > 0) {
-                                mapData[y][x].populations = entities.map((_, index) => populations[index] || 0);
-                            } else {
-                                mapData[y][x].populations = populations;
-                            }
-                            console.log(`Cell [${x},${y}]: tile=${match[1]}, pops=[${populations.join(',')}]`);
-                        } else {
-                            // Just a tile type number
-                            const tileType = parseInt(cell);
-                            if (!isNaN(tileType)) {
-                                mapData[y][x].tileType = tileType;
-                                mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
-                                console.log(`Cell [${x},${y}]: simple tile=${tileType}`);
-                            } else {
-                                console.warn(`Invalid cell format at [${x},${y}]: "${cell}"`);
-                                mapData[y][x].tileType = -1;
-                                mapData[y][x].populations = entities.length > 0 ? entities.map(() => 0) : [];
-                            }
-                        }
-                    }
-                }
-            }
-
-            console.log('Map data parsed successfully, creating visual...');
-
-            // Force recreate the visual map
-            createMapVisual();
-            
-            // Center the map after loading
-            setTimeout(() => {
-                resetView();
-                console.log('Map visual updated and centered');
-            }, 100);
-            
-            updateEntityList();
-        }
-
-        function updateEntityList() {
-            const listContainer = document.getElementById('entity-list');
-            
-            if (entities.length === 0) {
-                listContainer.innerHTML = '<p style="text-align: center; color: #a0aec0; margin: 20px 0;">Load a matrices file to see entities</p>';
-                return;
-            }
-
-            // Calculate total populations across all map tiles
-            const totalPopulations = entities.map(() => 0);
-            
-            for (let y = 0; y < mapData.length; y++) {
-                for (let x = 0; x < mapData[y].length; x++) {
-                    const cell = mapData[y][x];
-                    if (cell.tileType >= 0) {
-                        for (let i = 0; i < cell.populations.length; i++) {
-                            totalPopulations[i] += cell.populations[i] || 0;
-                        }
-                    }
-                }
-            }
-
-            listContainer.innerHTML = entities.map((entity, index) => `
-                <div class="entity-item" onclick="selectEntity(${index})">
-                    <span class="entity-name">
-                        <div class="entity-color" style="background-color: ${getEntityColor(index)}"></div>
-                        ${entity.name}
-                    </span>
-                    <span class="entity-population">${formatNumber(totalPopulations[index] || 0)}</span>
-                </div>
-            `).join('');
-        }
-
-        function selectEntity(index) {
-            // Save current population value for the previously selected entity
-            if (selectedEntity !== null) {
-                entityPopulationValues[selectedEntity] = populationValue;
-            }
-
-            selectedEntity = index;
-            
-            // Restore population value for newly selected entity (default to 1 if not set)
-            populationValue = entityPopulationValues[index] || 1;
-            document.getElementById('population-value').value = populationValue;
-            
-            // Update UI
-            document.querySelectorAll('.entity-item').forEach((item, i) => {
-                item.classList.toggle('selected', i === index);
             });
 
-            document.getElementById('selected-entity').textContent = entities[index].name;
-            
-            // Switch to population mode if selecting an entity
-            if (toolMode === 'terrain') {
-                switchToolMode('population');
-            }
+            // Resize handles
+            initResizeHandles();
+
+            // Initial state: welcome screen is shown, editor is hidden
+            updateWelcomeState();
+            setMapBg(mapBgColour); // init swatch + viewport bg
         }
 
-        function switchToolMode(mode) {
-            toolMode = mode;
-            
-            // Update mode buttons
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
-            });
-
-            // Show/hide controls
-            document.getElementById('terrain-controls').style.display = mode === 'terrain' ? 'block' : 'none';
-            document.getElementById('population-controls').style.display = mode === 'population' ? 'block' : 'none';
-        }
-
-        function setDrawMode(mode) {
-            drawMode = mode;
-        }
-
-        function adjustPopulation(delta) {
-            const input = document.getElementById('population-value');
-            const newValue = Math.max(0, Math.min(999999999, parseInt(input.value) + delta));
-            input.value = newValue;
-            populationValue = newValue;
-            
-            // Save the new value for the current entity
-            if (selectedEntity !== null) {
-                entityPopulationValues[selectedEntity] = newValue;
-            }
-        }
-
-        function createMap() {
-            const newWidth = parseInt(document.getElementById('map-width').value);
-            const newHeight = parseInt(document.getElementById('map-height').value);
-
-            // Store existing map data if it exists
-            const oldMapData = mapData.length > 0 ? [...mapData] : [];
-            const oldWidth = oldMapData.length > 0 ? oldMapData[0].length : 0;
-            const oldHeight = oldMapData.length;
-
-            // Initialize new map data
-            mapData = Array(newHeight).fill().map(() => 
-                Array(newWidth).fill().map(() => ({
-                    tileType: -1, // -1 = empty, 0+ = tile
-                    populations: entities.map(() => 0)
-                }))
-            );
-
-            // Preserve existing data that fits within new dimensions
-            for (let y = 0; y < Math.min(oldHeight, newHeight); y++) {
-                for (let x = 0; x < Math.min(oldWidth, newWidth); x++) {
-                    if (oldMapData[y] && oldMapData[y][x]) {
-                        mapData[y][x] = {
-                            tileType: oldMapData[y][x].tileType,
-                            populations: [...(oldMapData[y][x].populations || entities.map(() => 0))]
-                        };
-                        
-                        // Ensure populations array matches current entities length
-                        while (mapData[y][x].populations.length < entities.length) {
-                            mapData[y][x].populations.push(0);
-                        }
-                        mapData[y][x].populations = mapData[y][x].populations.slice(0, entities.length);
-                    }
-                }
-            }
-
-            createMapVisual();
-            updateEntityList(); // Update totals in case content was cropped
-        }
-
-        function createMapVisual() {
-            const width = mapData.length > 0 ? mapData[0].length : 0;
-            const height = mapData.length;
-
-            // Create grid HTML
-            const grid = document.getElementById('map-grid');
-            grid.style.gridTemplateColumns = `repeat(${width}, 40px)`;
-            grid.innerHTML = '';
-
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const cell = document.createElement('div');
-                    const cellData = mapData[y][x];
-                    
-                    // Set initial cell appearance based on preserved data
-                    cell.className = cellData.tileType >= 0 ? 'map-cell tile' : 'map-cell empty';
-                    cell.dataset.x = x;
-                    cell.dataset.y = y;
-                    
-                    const popDisplay = document.createElement('div');
-                    popDisplay.className = 'population-display';
-                    cell.appendChild(popDisplay);
-
-                    // Mouse events for drawing
-                    cell.addEventListener('mousedown', handleCellClick);
-                    cell.addEventListener('mouseenter', handleCellDrag);
-                    
-                    grid.appendChild(cell);
-
-                    // Update cell display with preserved populations
-                    updateCellDisplay(cell, x, y);
-                }
-            }
-
-            updateMapTransform(); // Maintain current zoom and pan
-        }
-
-        function handleCellClick(event) {
-            // Only handle drawing if not panning
-            if (!isPanning) {
-                isDrawing = true;
-                updateCell(event.target);
-            }
-            event.preventDefault();
-        }
-
-        function handleCellDrag(event) {
-            if (isDrawing && event.buttons === 1 && !isPanning) {
-                updateCell(event.target);
-            }
-        }
-
-        function updateCell(cell) {
-            const x = parseInt(cell.dataset.x);
-            const y = parseInt(cell.dataset.y);
-
-            if (toolMode === 'terrain') {
-                if (drawMode === 'tile') {
-                    mapData[y][x].tileType = 0;
-                    cell.className = 'map-cell tile';
-                } else if (drawMode === 'empty') {
-                    mapData[y][x].tileType = -1;
-                    mapData[y][x].populations = entities.map(() => 0);
-                    cell.className = 'map-cell empty';
-                    cell.classList.remove('has-population');
-                }
-            } else if (toolMode === 'population' && selectedEntity !== null) {
-                // Auto-convert empty tiles to land tiles when placing population
-                if (mapData[y][x].tileType < 0) {
-                    mapData[y][x].tileType = 0;
-                    cell.className = 'map-cell tile';
-                }
-                
-                // Now place the population (works on both existing and newly converted tiles)
-                if (mapData[y][x].tileType >= 0) {
-                    mapData[y][x].populations[selectedEntity] = populationValue;
-                    updateCellDisplay(cell, x, y);
-                }
-            }
-
-            updateEntityList(); // Update totals in sidebar
-        }
-
-        function updateCellDisplay(cell, x, y) {
-            const cellData = mapData[y][x];
-            const popDisplay = cell.querySelector('.population-display');
-            
-            if (!entities.length || cellData.tileType < 0) {
-                cell.classList.remove('has-population');
-                popDisplay.innerHTML = '';
-                return;
-            }
-
-            // Only show entities that have population > 0
-            const presentEntities = entities
-                .map((entity, index) => ({
-                    ...entity,
-                    index,
-                    population: cellData.populations[index] || 0,
-                    color: getEntityColor(index)
-                }))
-                .filter(entity => entity.population > 0);
-
-            if (presentEntities.length > 0) {
-                cell.classList.add('has-population');
-                
-                const popBoxes = presentEntities.map(entity => 
-                    `<div class="entity-pop-box" style="background-color: ${entity.color}">${formatNumber(entity.population)}</div>`
-                ).join('');
-                
-                popDisplay.innerHTML = popBoxes;
-            } else {
-                cell.classList.remove('has-population');
-                popDisplay.innerHTML = '';
-            }
-        }
-
-        function updateAllCellDisplays() {
-            const width = mapData.length > 0 ? mapData[0].length : 0;
-            const height = mapData.length;
-
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-                    if (cell) {
-                        updateCellDisplay(cell, x, y);
-                    }
-                }
-            }
-        }
-
-        function clearMap() {
-            const width = parseInt(document.getElementById('map-width').value);
-            const height = parseInt(document.getElementById('map-height').value);
-
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    mapData[y][x] = {
-                        tileType: -1,
-                        populations: entities.map(() => 0)
-                    };
-                }
-            }
-
-            // Update visual
-            document.querySelectorAll('.map-cell').forEach(cell => {
-                cell.className = 'map-cell empty';
-                cell.classList.remove('has-population');
-                const popDisplay = cell.querySelector('.population-display');
-                if (popDisplay) popDisplay.innerHTML = '';
-            });
-
-            updateEntityList(); // Update totals in sidebar
-        }
-
-        function generateCsv() {
-            if (mapData.length === 0) return '';
-
-            const rows = [];
-            
-            for (let y = 0; y < mapData.length; y++) {
-                const row = [];
-                for (let x = 0; x < mapData[y].length; x++) {
-                    const cell = mapData[y][x];
-                    
-                    if (cell.tileType === -1) {
-                        row.push('-1');
-                    } else {
-                        const populations = cell.populations.join(',');
-                        row.push(`${cell.tileType}[${populations}]`);
-                    }
-                }
-                rows.push(row.join(','));
-            }
-
-            return rows.join('\n');
-        }
-
-        function exportMap() {
-            const csv = generateCsv();
-            if (!csv) {
-                alert('No map data to export');
-                return;
-            }
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'Map.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function showStatus(id, message, type) {
-            const status = document.getElementById(id);
-            status.textContent = message;
-            status.className = `status show ${type}`;
-            setTimeout(() => status.classList.remove('show'), 3000);
-        }
-
-        // Handle mouse up to stop drawing
-        document.addEventListener('mouseup', () => {
-            isDrawing = false;
-        });
+        document.addEventListener('DOMContentLoaded', init);
+    })();
     </script>
 </body>
 </html>
