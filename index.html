@@ -902,6 +902,57 @@
             opacity: 0.7;
         }
 
+        /* Export Dialog */
+        .export-dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0,0,0,0.45);
+            align-items: center;
+            justify-content: center;
+        }
+        .export-dialog-overlay.show { display: flex; }
+        .export-dialog {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            width: 320px;
+            overflow: hidden;
+        }
+        .export-dialog h3 {
+            margin: 0;
+            padding: 14px 16px;
+            font-size: 14px;
+            background: var(--bg-dark);
+            color: white;
+        }
+        .export-dialog-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .export-option {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .export-option:hover {
+            border-color: var(--accent);
+            background: #f7fafc;
+        }
+        .export-option strong { font-size: 12px; }
+        .export-option span { font-size: 11px; color: #718096; margin-top: 2px; }
+        .export-dialog-footer {
+            padding: 0 16px 14px;
+            text-align: right;
+        }
+
         /* Welcome / Load Screen */
         .welcome-overlay {
             position: fixed;
@@ -1308,6 +1359,25 @@
         </div>
     </div>
 
+    <div class="export-dialog-overlay" id="export-dialog-overlay">
+        <div class="export-dialog">
+            <h3>Export Map</h3>
+            <div class="export-dialog-body">
+                <div class="export-option" id="export-full">
+                    <strong>Full</strong>
+                    <span>Includes zone metadata, colours, and map name</span>
+                </div>
+                <div class="export-option" id="export-compat">
+                    <strong>Compatible</strong>
+                    <span>Grid data only, zones as 0 (land) or -1 (empty)</span>
+                </div>
+            </div>
+            <div class="export-dialog-footer">
+                <button class="btn btn-secondary btn-sm" id="export-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     (() => {
         // ── State ──────────────────────────────────────────────
@@ -1572,6 +1642,12 @@
                 vp.classList.remove('pan-ready');
                 vp.classList.add('tool-' + mode);
             }
+
+            // Force resize handles to show/hide (avoids rendering glitch)
+            const showHandles = mode === 'zone';
+            document.querySelectorAll('.resize-handle').forEach(h => {
+                h.style.display = showHandles ? 'block' : 'none';
+            });
         }
 
         // ── Cursor Tooltip ─────────────────────────────────────
@@ -2499,7 +2575,12 @@
             const reader = new FileReader();
             reader.onload = ev => {
                 try {
-                    parseMatrices(ev.target.result);
+                    const text = ev.target.result;
+                    if (looksLikeMapFile(text)) {
+                        showStatus('w-matrices-status', 'This looks like a map file, not a matrices file.', 'error');
+                        return;
+                    }
+                    parseMatrices(text);
                     showMatricesPreview();
                     updateWelcomeState();
                 } catch (err) {
@@ -2507,6 +2588,16 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        function looksLikeMapFile(text) {
+            const lines = text.trim().split('\n');
+            for (const line of lines.slice(0, 5)) {
+                const t = line.trim();
+                if (t.startsWith('#zones:') || t.startsWith('#entities:') || t.startsWith('#name:') || t.startsWith('#bg:')) return true;
+                if (/^-1[,\s]|,-1[,\s]|,-1$|^\d+\[/.test(t)) return true;
+            }
+            return false;
         }
 
         function showMatricesPreview() {
@@ -2573,7 +2664,7 @@
             reader.onload = ev => {
                 try {
                     parseMapCSV(ev.target.result);
-                    const name = file.name.replace(/\.csv$/i, '');
+                    const name = file.name.replace(/\.csv$/i, '').replace(/_\d{8}_\d{6}$/, '');
                     document.getElementById('map-name').value = name;
                     showStatus('w-map-status', 'Map loaded!', 'success');
                     enterEditor();
@@ -2773,6 +2864,53 @@
             return lines.join('\n');
         }
 
+        function generateCSV_v1() {
+            if (!mapData.length) return '';
+            const lines = [];
+            for (const row of mapData) {
+                const cells = row.map(d => {
+                    if (d.zoneId < 0) return '-1';
+                    return `0[${d.populations.join(',')}]`;
+                });
+                lines.push(cells.join(','));
+            }
+            return lines.join('\n');
+        }
+
+        function exportMapV1() {
+            const csv = generateCSV_v1();
+            if (!csv) { alert('No map data to export'); return; }
+
+            const raw = (document.getElementById('map-name').value || 'Map').trim() || 'Map';
+            const safeName = raw.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_');
+            const now = new Date();
+            const ts = now.getFullYear().toString()
+                + String(now.getMonth() + 1).padStart(2, '0')
+                + String(now.getDate()).padStart(2, '0')
+                + '_'
+                + String(now.getHours()).padStart(2, '0')
+                + String(now.getMinutes()).padStart(2, '0')
+                + String(now.getSeconds()).padStart(2, '0');
+            const filename = `${safeName}_compatible_${ts}.csv`;
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        function showExportDialog() {
+            if (!mapData.length) { alert('No map data to export'); return; }
+            document.getElementById('export-dialog-overlay').classList.add('show');
+        }
+        function hideExportDialog() {
+            document.getElementById('export-dialog-overlay').classList.remove('show');
+        }
+
         function exportMap() {
             const csv = generateCSV();
             if (!csv) { alert('No map data to export'); return; }
@@ -2893,7 +3031,25 @@
             });
 
             // Export
-            document.getElementById('btn-export').addEventListener('click', exportMap);
+            document.getElementById('btn-export').addEventListener('click', showExportDialog);
+            document.getElementById('export-full').addEventListener('click', () => { hideExportDialog(); exportMap(); });
+            document.getElementById('export-compat').addEventListener('click', () => {
+                const usedZones = new Set();
+                for (const row of mapData) {
+                    for (const cell of row) {
+                        if (cell.zoneId >= 0) usedZones.add(cell.zoneId);
+                    }
+                }
+                if (usedZones.size > 1) {
+                    if (!confirm(`Your map uses ${usedZones.size} different zones. Compatible export will collapse all zones into a single zone (0). Continue?`)) return;
+                }
+                hideExportDialog();
+                exportMapV1();
+            });
+            document.getElementById('export-cancel').addEventListener('click', hideExportDialog);
+            document.getElementById('export-dialog-overlay').addEventListener('click', e => {
+                if (e.target === e.currentTarget) hideExportDialog();
+            });
 
             // Cursor tooltip
             const viewport = document.getElementById('map-viewport');
